@@ -1039,28 +1039,44 @@ class CDao extends CEle{
         $fArr = array();
         if($pArr){
             foreach($pArr as $_f){
-                $fArr[] = trim(trim(trim($_f,',')));
+                $fArr[] = ltrim(trim(trim(trim($_f,','))), '^');
             }
         }else{
            $fArr = explode(',', trim($fds,'^')); 
            foreach($fArr as &$_f)$_f=trim($_f);
         }
-        if(0 === strpos($fds,'^')){ //过滤模式
+        if(false !== ($pos = strpos($fds,'^'))){ //过滤模式
             $ignoreArr = $fArr;
             foreach($fieldArr as $k=>$f){
                 if(in_array($f, $ignoreArr)) unset($fieldArr[$k]);
             }
+            if($pos > 0){
+                foreach($fArr as $uf){
+                    if(strpos($uf, ' ')){
+                        $rf = strstr($uf, ' ', true);
+                        $al = trim(strstr($uf, ' '));
+                        $kk = array_search($rf, $fieldArr);
+                        if(is_numeric($kk)){
+                            $fieldArr[$kk] = trim($rf,$backquote).' '.trim($al,$backquote);
+                        }
+                    }
+                }
+            }
             $fds = $backquote.implode($backquote.','.$backquote, $fieldArr).$backquote;
+            if(strpos($fds, ' ')){
+                $fds = str_replace(' ', $backquote.' '.$backquote, $fds);
+            }
         }else {
             foreach($fArr as $k=>&$f){
                 if('*' == $f)continue;
                 if(strpos($f,'+') || strpos($f,'-') || strpos($f,'*') || strpos($f,'/') || strpos($f,'('))continue;//表达式
                 // if(preg_match("/[0-9a-z_]+?\(.*\)/si", $f))continue;//说明是mysql函数
                 if(strpos($f, ' ')){ //有空格说明字段起了别名
-                    if(strpos(strtolower($f), 'as')){
-                        list($realf, $as, $alias) = explode(' ', $f);
-                    }else{
-                        list($realf, $alias) = explode(' ', $f);
+                    $realf = strstr($f, ' ', true);
+                    $alias = trim(strstr($f, ' '));
+                    if(false !== strpos(strtolower($alias), 'as')){
+                        $alias = trim($alias);
+                        $alias = ltrim(strstr($alias, ' '));
                     }
                     $realf = trim($realf, $backquote);
                     $alias = trim($alias, $backquote);
@@ -1079,6 +1095,7 @@ class CDao extends CEle{
                     }
                 }
             }
+            // print_r($fArr);exit;
             if(empty($fArr)){
                 $fds = '*';
             }else{
