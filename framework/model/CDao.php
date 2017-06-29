@@ -1074,7 +1074,7 @@ class CDao extends CEle{
                 if(strpos($f, ' ')){ //有空格说明字段起了别名
                     $realf = strstr($f, ' ', true);
                     $alias = trim(strstr($f, ' '));
-                    if(false !== strpos(strtolower($alias), 'as')){
+                    if(false !== strpos(strtolower($alias), 'as ')){
                         $alias = trim($alias);
                         $alias = ltrim(strstr($alias, ' '));
                     }
