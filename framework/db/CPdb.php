@@ -184,6 +184,9 @@ abstract class CPdb {
         //end要更新的值
 
         $sql = "update {$table} set {$vallist} {$cdtions}";
+        if(isset($exArr['limit']) && intval($exArr['limit'])>0){
+            $sql .= ' limit '.$exArr['limit'];
+        }
         try{
             // $this->execute('set names utf8');
             $ok = $this->execute($sql, 2);
