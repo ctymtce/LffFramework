@@ -295,6 +295,20 @@ class CFun {
         return $groupedArr;
     }
     /*
+    * desc: groupBy的逆运算
+    */
+    static function unGroup($array)
+    {
+        foreach($array as $kp=>$arr){
+            $kc = key($arr);
+            $vc = $arr[$kc];
+            if(is_array($vc)){
+                $array[$kp] = $vc;
+            }
+        }
+        return $array;
+    }
+    /*
     * desc: 编辑转换
     * 如果ArrOr是array那返回亦是array,反之，如果是scalar那返回亦是scalar
     *@Arror --- mix 
