@@ -10,13 +10,14 @@
 class CDao extends CEle{
 
     private $keyArr = array(
-        'order'  => 0,
-        'having' => 0,
-        'group'  => 0,
-        'limit'  => 0,
-        'fields' => 0,
-        'flat'   => 0,
-        'prefix' => 0,
+        'order'    => 0,
+        'having'   => 0,
+        'group'    => 0,
+        'limit'    => 0,
+        'fields'   => 0,
+        'flat'     => 0,
+        'prefix'   => 0,
+        'defaults' => 0,
     );
     private $intArr  = array(
         'int',
@@ -361,13 +362,19 @@ class CDao extends CEle{
                                     $_ex_arr = array_merge(array('limit'=>$_left_cnt,'only_data'=>true), $_eex_arr);
                                     $fRows = $db->getAll($_table, $_wh_arr, $_ex_arr);
                                     // echo $db->getSqlString(true);
-                                    if($fRows){
+                                    // print_r($fRows);
+                                    // print_r($_eex_arr);
+                                    $defaults = array();
+                                    if(isset($_eex_arr['defaults'])){
+                                        parse_str(str_replace(',','&',$_eex_arr['defaults']), $defaults);
+                                    }
+                                    if($fRows || $defaults){
                                         // $_subkey = $i>0?($_table.$i):$_table;
                                         $_subkey = $i>0?($_alias.$i):$_alias;
                                         if(isset($_eex_arr['flat'])){
-                                            $rowArr = $this->joinToField($rowArr, $fRows, "$kL:$kR", $_eex_arr['flat'], isset($_eex_arr['prefix'])?$_eex_arr['prefix']:'');
+                                            $rowArr = $this->joinToField($rowArr, $fRows, "$kL:$kR", $_eex_arr['flat'], isset($_eex_arr['prefix'])?$_eex_arr['prefix']:'', $defaults);
                                         }else{
-                                            $rowArr = $this->joinToArray($rowArr, $fRows, "$kL:$kR", $_subkey);
+                                            $rowArr = $this->joinToArray($rowArr, $fRows, "$kL:$kR", $_subkey, false, $defaults);
                                         }
                                     }
                                 }else{

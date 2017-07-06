@@ -260,9 +260,9 @@ abstract class CEle {
     *
     *
     */
-    public function joinToField($rowArr, $subArr, $fields, $subkeys=null, $prefix='')
+    public function joinToField($rowArr, $subArr, $fields, $subkeys=null, $prefix='', $defaults=array())
     {
-        if(empty($rowArr) || empty($subArr) || !is_array($rowArr) || !is_array($subArr) || !$subkeys)return $rowArr;
+        if(empty($rowArr) || (empty($subArr) && empty($defaults))|| !is_array($rowArr) || !is_array($subArr) || !$subkeys)return $rowArr;
         list($kL,$kR) = explode(':', $fields);
         $subArr = $this->fieldAsKey($subArr, $kR);
         // $this->dump($subArr);
@@ -279,6 +279,8 @@ abstract class CEle {
                     );
                 }
                 $rr = array_merge($rr, $subsubArr);
+            }elseif($defaults){
+                $rr = array_merge($rr, $defaults);
             }
         }
         return $rowArr;
