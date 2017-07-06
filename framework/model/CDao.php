@@ -1029,38 +1029,42 @@ class CDao extends CEle{
         if(empty($typeArr)) {
             return '*';
         }
+        $igArr = array();
         if(strpos($fds, '(')){//这意味着有函数表达式
             $ok = preg_match_all("/(?|[`a-z\_][a-z\_0-9\s\+\-\*\/`]+?,|[a-z\_][0-9a-z_\s]+?\(.*?\).*?\,|\(.*?\).*?\,|\*,)/i", ltrim($fds,'^').',', $pArr);
             if(!isset($pArr[0])) return '*';
             $pArr = $pArr[0];
         }else{//这是为了提高性能
-            $pArr = explode(',', ltrim($fds,'^'));
+            if(false !== strpos($fds, '^')){
+                // echo ltrim(strstr($fds,'^',true),'^');
+                $pArr = explode(',', trim(strstr($fds,'^',true),','));
+                $igArr = explode(',', ltrim(strstr($fds,'^'),'^'));
+            }else{
+                $pArr = explode(',', ltrim($fds,'^'));
+            }
         }
         $fArr = array();
+        if($igArr){
+            foreach($igArr as &$if){
+                $if = ltrim(trim(trim(trim($if,','))), '^');
+            }
+        }
         if($pArr){
             foreach($pArr as $_f){
-                $fArr[] = ltrim(trim(trim(trim($_f,','))), '^');
+                if($_f){
+                    $fArr[] = ltrim(trim(trim(trim($_f,','))), '^');
+                }
             }
         }else{
-           $fArr = explode(',', trim($fds,'^')); 
+           $fArr = explode(',', trim($fds,'^'));
            foreach($fArr as &$_f)$_f=trim($_f);
         }
         if(false !== ($pos = strpos($fds,'^'))){ //过滤模式
-            $ignoreArr = $fArr;
             foreach($fieldArr as $k=>$f){
-                if(in_array($f, $ignoreArr)) unset($fieldArr[$k]);
+                if(in_array($f, $igArr)) unset($fieldArr[$k]);
             }
-            if($pos > 0){
-                foreach($fArr as $uf){
-                    if(strpos($uf, ' ')){
-                        $rf = strstr($uf, ' ', true);
-                        $al = trim(strstr($uf, ' '));
-                        $kk = array_search($rf, $fieldArr);
-                        if(is_numeric($kk)){
-                            $fieldArr[$kk] = trim($rf,$backquote).' '.trim($al,$backquote);
-                        }
-                    }
-                }
+            if($fArr){
+                $fieldArr = array_merge($fArr, $fieldArr);
             }
             $fds = $backquote.implode($backquote.','.$backquote, $fieldArr).$backquote;
             if(strpos($fds, ' ')){
