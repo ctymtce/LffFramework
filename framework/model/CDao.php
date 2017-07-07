@@ -1077,6 +1077,9 @@ class CDao extends CEle{
             if(strpos($fds, ' ')){
                 $fds = str_replace(' ', $backquote.' '.$backquote, $fds);
             }
+            if(false !== strpos($fds, $backquote.$backquote)){
+                $fds = str_replace($backquote.$backquote, $backquote, $fds);
+            }
         }else {
             foreach($fArr as $k=>&$f){
                 if('*' == $f)continue;
