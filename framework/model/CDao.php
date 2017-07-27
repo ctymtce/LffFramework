@@ -1133,20 +1133,20 @@ class CDao extends CEle{
         }
     }
 
-    private function isPrimaryKey($table, $field)
+    public function isPrimaryKey($table, $field)
     {
         $tc     = $this->LoadTableCache($table);
         $types  = &$tc->types;
         return 'PK'==(isset($types[$field]['prik'])&&$types[$field]['prik'])?true:false;
     }
-    private function isUniqueKey($table, $field)
+    public function isUniqueKey($table, $field)
     {
         $tc = $this->LoadTableCache($table);
         if($this->isPrimaryKey($table, $field)) return true;
         $types = &$tc->types;
         return 'UNI'==(isset($types[$field]['unix'])&&$types[$field]['unix'])?true:false;
     }
-    private function getPrimaryKey($table)
+    public function getPrimaryKey($table)
     {
         $tc = $this->LoadTableCache($table);
         if(!$tc) return false;
@@ -1157,7 +1157,7 @@ class CDao extends CEle{
     * desc: 为表格创建模板
     *
     */
-    private function LoadTableCache($table)
+    public function LoadTableCache($table)
     {
         if(!isset($this->Arr809613623213726)){
             //暂存 dbmodel(原:dbmodelArr)
