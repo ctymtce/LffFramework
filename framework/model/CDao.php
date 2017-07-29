@@ -16,6 +16,7 @@ class CDao extends CEle{
         'limit'    => 0,
         'fields'   => 0,
         'flat'     => 0,
+        'keyas'    => 0,
         'prefix'   => 0,
         'defaults' => 0,
     );
@@ -385,6 +386,13 @@ class CDao extends CEle{
                                     if($fRows){
                                         //因为这时的pk和fk相当于调换了位置,所以和上面的是相反的
                                         $rowArr = $this->joinToTrray($rowArr, $fRows, "$kL:$kR", $_alias);
+                                        if(isset($_ex_arr['keyas'])){
+                                            foreach($rowArr as &$r0001){
+                                                if(isset($r0001[$_alias])){
+                                                    $r0001[$_alias] = $this->fieldAsKey($r0001[$_alias], $_ex_arr['keyas']);
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -568,7 +576,20 @@ class CDao extends CEle{
                             $jData = array_flip(explode(',', $eex_arr['fields']));//join data
                         }
                         if(isset($jData)){
+                            //检查带有默认值的字段
+                            $jDefs = array();
+                            foreach($jData as $dk=>$dv){
+                                if(strpos($dk, '.')){
+                                    list($dk, $dv) = explode('.', $dk);
+                                    $jDefs[$dk] = $dv;
+                                    $jData[$dk] = $dv;
+                                }
+                            }
                             $jData = array_intersect_key($data, $jData);
+                            if($jDefs){
+                                $jDefs = array_diff_key($jDefs, $jData);
+                                $jData = array_merge($jData, $jDefs);
+                            }
                             $jData[$kR] = $id;
                             $this->addAtom($jTable, $jData, array_intersect_key($eex_arr, array('ondups'=>1)));//增加更新(onduplicate key update)
                         }
