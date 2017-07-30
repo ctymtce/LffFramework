@@ -32,4 +32,8 @@ class CModel extends CEle{
     {
         return $this->Dao()->getMore($table, $whArr, $exArr, $total);
     }
+    public function encoding($encoding='latin1',&$oldencoding=null)
+    {
+        return $this->Dao()->encoding($encoding, $oldencoding);
+    }
 };
