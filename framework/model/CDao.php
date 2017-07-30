@@ -251,7 +251,7 @@ class CDao extends CEle{
     {
         return $this->Cluster('slaver', $name);
     }
-    public function encoding($encoding='latin1',&$oldencoding=null)
+    public function Encoding($encoding='latin1',&$oldencoding=null)
     {
         $oldencoding = $this->getConnection(true)->getEncoding();
         $this->Execute("set names {$encoding}");
