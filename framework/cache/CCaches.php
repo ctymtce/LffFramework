@@ -80,7 +80,7 @@ class CCaches {
         return $c %= self::$level;
     }
     
-    static function remove($id)
+    static function Remove($id)
     {
         $group = (is_array($id)&&isset($id['group']))?$id['group']:null;
         $id = self::mkId($id);
@@ -96,7 +96,7 @@ class CCaches {
      *@all --- bool
      *         clean all cache files if true or clean expired's file only if false.
     */
-    static function clean($all=true)
+    static function Clean($all=true)
     {
         for($i=0; $i<self::$level; $i++) {
             $cacheDir  = self::$chdir .'/'.$i;
