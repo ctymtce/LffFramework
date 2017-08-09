@@ -46,8 +46,8 @@ class CTime {
         $wk = intval($wk);
         if(!$year) $year = date('Y');
         $year_start = "{$year}-01-01";
-        $date_first = date('Y-m-d', strtotime($year_start)+(($wk*7)*86400));
-        $date_end = date('Y-m-d', strtotime($year_start)+((($wk+1)*7)*86400));
+        $date_first = date('Y-m-d', strtotime($year_start)+((($wk-1)*7)*86400));
+        $date_end = date('Y-m-d', strtotime($year_start)+((($wk)*7)*86400));
         return array($date_first, $date_end);
     }
 
