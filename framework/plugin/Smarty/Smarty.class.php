@@ -100,22 +100,22 @@ function requireOnce($filename)
 /**
  * Load always needed external class files
 */
-requireOnce(SMARTY_SYSPLUGINS_DIR.'smarty_internal_data.php');
-requireOnce(SMARTY_SYSPLUGINS_DIR.'smarty_internal_templatebase.php');
-requireOnce(SMARTY_SYSPLUGINS_DIR.'smarty_internal_template.php');
-requireOnce(SMARTY_SYSPLUGINS_DIR.'smarty_resource.php');
-requireOnce(SMARTY_SYSPLUGINS_DIR.'smarty_internal_resource_file.php');
-requireOnce(SMARTY_SYSPLUGINS_DIR.'smarty_cacheresource.php');
-requireOnce(SMARTY_SYSPLUGINS_DIR.'smarty_internal_cacheresource_file.php');
+// requireOnce(SMARTY_SYSPLUGINS_DIR.'smarty_internal_data.php');
+// requireOnce(SMARTY_SYSPLUGINS_DIR.'smarty_internal_templatebase.php');
+// requireOnce(SMARTY_SYSPLUGINS_DIR.'smarty_internal_template.php');
+// requireOnce(SMARTY_SYSPLUGINS_DIR.'smarty_resource.php');
+// requireOnce(SMARTY_SYSPLUGINS_DIR.'smarty_internal_resource_file.php');
+// requireOnce(SMARTY_SYSPLUGINS_DIR.'smarty_cacheresource.php');
+// requireOnce(SMARTY_SYSPLUGINS_DIR.'smarty_internal_cacheresource_file.php');
 
-requireOnce(SMARTY_SYSPLUGINS_DIR.'smarty_internal_templatecompilerbase.php');
-requireOnce(SMARTY_SYSPLUGINS_DIR.'smarty_internal_templatelexer.php');
-requireOnce(SMARTY_SYSPLUGINS_DIR.'smarty_internal_templateparser.php');
-requireOnce(SMARTY_SYSPLUGINS_DIR.'smarty_internal_compilebase.php');
-requireOnce(SMARTY_SYSPLUGINS_DIR.'smarty_internal_write_file.php');
-requireOnce(SMARTY_SYSPLUGINS_DIR.'smarty_internal_compile_block.php');
-requireOnce(SMARTY_SYSPLUGINS_DIR.'smarty_internal_resource_string.php');
-requireOnce(SMARTY_SYSPLUGINS_DIR.'smarty_internal_compilebase.php');
+// requireOnce(SMARTY_SYSPLUGINS_DIR.'smarty_internal_templatecompilerbase.php');
+// requireOnce(SMARTY_SYSPLUGINS_DIR.'smarty_internal_templatelexer.php');
+// requireOnce(SMARTY_SYSPLUGINS_DIR.'smarty_internal_templateparser.php');
+// requireOnce(SMARTY_SYSPLUGINS_DIR.'smarty_internal_compilebase.php');
+// requireOnce(SMARTY_SYSPLUGINS_DIR.'smarty_internal_write_file.php');
+// requireOnce(SMARTY_SYSPLUGINS_DIR.'smarty_internal_compile_block.php');
+// requireOnce(SMARTY_SYSPLUGINS_DIR.'smarty_internal_resource_string.php');
+// requireOnce(SMARTY_SYSPLUGINS_DIR.'smarty_internal_compilebase.php');
 
 
 /**

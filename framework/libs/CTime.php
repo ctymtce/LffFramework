@@ -7,6 +7,35 @@
 
 class CTime {
 
+    //人性化时间长度
+    static function hStoptime($delta=0)
+    {
+        $htime = '';
+        //1,天
+        $days = intval($delta/86400);
+        if($days >= 1){
+            $htime .= $days.'天';
+            $delta -= $days*86400;
+        }
+        //2,时
+        $hours = intval($delta/3600);
+        if($hours >= 1){
+            $htime .= $hours.'小时';
+            $delta -= $hours*3600;
+        }
+        //2,分
+        $minutes = intval($delta/60);
+        if($minutes >= 1){
+            $htime .= $minutes.'分';
+            $delta -= $minutes*60;
+        }
+        //2,秒
+        if($delta >= 1){
+            $htime .= $delta.'秒';
+        }
+        return $htime;
+    }
+
     //指定日期的那一月的第一天
     static function monFirstDay($dtime=null)
     {
