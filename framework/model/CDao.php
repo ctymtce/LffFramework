@@ -908,7 +908,7 @@ class CDao extends CEle{
         $quoting  = isset($exArr['quoting'])?$exArr['quoting']:false;
         $kickout  = isset($exArr['kickout'])?$exArr['kickout']:true;
 
-        if(isset($records[0])){//多维模式
+        if($this->__isMutx($records)){//多维模式
             foreach($records as &$record){
                 $this->__ftVals($tc, $tc->types, $record, $quoting, $kickout);
             }
@@ -917,12 +917,28 @@ class CDao extends CEle{
         }
         return $records;
     }
+    /*
+    * desc: 判断是否为多维数组
+    *
+    */
+    private function __isMutx(&$records)
+    {
+        if(!is_array($records)) return false;
+        foreach(array_keys($records) as $ik){
+            if(is_string($ik))return false;
+        }
+        return true;
+    }
     private function __ftVals(&$tc, &$typeArr, &$record, $quoting=false, $kickout=false)
     {
         if(!$record || is_scalar($record)) return;
         $fieldArr = array_keys($typeArr);
 
         foreach($record as $f=>&$v) {
+            if(!isset($typeArr[$f])){
+                unset($record[$f]);
+                continue;
+            }
             if(!in_array($f, $fieldArr)) {
                 if($kickout){
                     unset($record[$f]);
