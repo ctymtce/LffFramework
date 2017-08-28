@@ -924,8 +924,8 @@ class CDao extends CEle{
     private function __isMutx(&$records)
     {
         if(!is_array($records)) return false;
-        foreach(array_keys($records) as $ik){
-            if(is_string($ik))return false;
+        foreach($records as $vv){
+            if(!is_array($vv))return false;
         }
         return true;
     }
