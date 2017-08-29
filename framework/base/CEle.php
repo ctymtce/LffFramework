@@ -35,6 +35,20 @@ abstract class CEle {
     {
         if(ob_get_length() > 0) ob_clean();
     }
+    public function CallStacks($spliter="\n")
+    {
+        $trace = explode("\n", (new Exception())->getTraceAsString());
+        $trace = array_reverse($trace);
+        // array_shift($trace); // remove {main}
+        // array_pop($trace);   // remove 当前方法
+        $length = count($trace);
+        $result = array();
+        
+        for($i=0; $i<$length; $i++){
+            $result[] = ($i+1).')'.substr($trace[$i], strpos($trace[$i], ' ')); // replace '#someNum' with '$i)', set the right ordering
+        }
+        return implode($spliter, $result);
+    }
     public function Exception($message, $prefix='<pre>', $suffix='</pre>')
     {
         if(!ini_get('display_errors'))return;

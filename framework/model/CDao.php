@@ -1296,6 +1296,9 @@ class CDao extends CEle{
     }
     private function writeDaoError($logs)
     {
+        if(is_array($logs)){
+            $logs[] = $this->CallStacks("\n\t\t");
+        }
         return $this->writeError($logs, 'dao');
     }
 };
