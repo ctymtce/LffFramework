@@ -918,7 +918,7 @@ class CDao extends CEle{
         return $records;
     }
     /*
-    * desc: 判断是否为多维数组
+    * desc: 判断是否为矩阵模式
     *
     */
     private function __isMutx(&$records)
