@@ -16,15 +16,6 @@ abstract class CCtrl extends CEle {
     protected $vfile   = null; //view file path
     protected $smarty  = null;
 
-    /*
-    * desc: the bellow three methods call by Lff(CApp class)
-    *
-    *
-    */
-    public function setRoute($route)
-    {
-        $this->route = $route;
-    }
     public function setCfile($cfile)
     {
         $this->cfile = $cfile;
@@ -141,19 +132,14 @@ abstract class CCtrl extends CEle {
             $this->smarty->assign('HOME',       $App->home);
             $this->smarty->assign('ROOT',       $App->boot);
             $this->smarty->assign('BOOT',       $App->boot);
-            $this->smarty->assign('ASSETS_LOC', $App->assetsLoc);
-            $this->smarty->assign('ASSETS_URL', $App->assetsUrl);
-            $this->smarty->assign('STATIC_LOC', $App->assetsLoc.'/static');
-            $this->smarty->assign('STATIC_URL', $App->assetsUrl.'/static');
-            $this->smarty->assign('UPLOAD_LOC', $App->assetsLoc.'/static/upload');
-            $this->smarty->assign('UPLOAD_URL', $App->assetsUrl.'/static/upload');
-            $this->smarty->assign('IMAGE_URL',  $App->imageUrl);
-            $this->smarty->assign('DATA_LOC',   $App->dataLoc);
-            $this->smarty->assign('IMG_URL',    $App->imageUrl);
-            $this->smarty->assign('CSS_URL',    $App->cssUrl);
-            $this->smarty->assign('JS_URL',     $App->jsUrl);
-            $this->smarty->assign('UI_URL',     $App->uiUrl);
-            $this->smarty->assign('UI_LOC',     $App->uiLoc);
+            $this->smarty->assign('ASSETS_LOC', $App->AssetsLoc);
+            $this->smarty->assign('ASSETS_URL', $App->AssetsUrl);
+            $this->smarty->assign('STATIC_LOC', $App->AssetsLoc.'/static');
+            $this->smarty->assign('STATIC_URL', $App->AssetsUrl.'/static');
+            $this->smarty->assign('UPLOAD_LOC', $App->AssetsLoc.'/static/upload');
+            $this->smarty->assign('UPLOAD_URL', $App->AssetsUrl.'/static/upload');
+            $this->smarty->assign('UI_URL',     $App->UiUrl);
+            $this->smarty->assign('UI_LOC',     $App->UiLoc);
             $this->smarty->assign('TPL_UI',     $App->TPL_UI);
             $this->smarty->assign('TPL_APP',    $App->TPL_APP);
             $this->smarty->assign('TPL_COM',    $App->TPL_COM);
@@ -164,7 +150,6 @@ abstract class CCtrl extends CEle {
             $this->smarty->assign('TPL_LAYOUT', $tpl_base_dir.'/templates/layout');
             $this->smarty->assign('TPL_CONFIG', $tpl_base_dir.'/congigs');
         }
-
         return $this->smarty;
     }
     public function assign($key, $value=null, $nocache=false)
@@ -216,7 +201,7 @@ abstract class CCtrl extends CEle {
         $template = $this->_trim_template($template, $compile_id_or);
         $this->isClean && ob_clean();
         $smarty->display($template, $cache_id_or, $compile_id_or, $parent);
-        $this->isExit && exit;
+        // $this->isExit && exit;
     }
     public function fetch($template=null, $cache_id_or=null, $compile_id_or=null, $parent=null)
     {

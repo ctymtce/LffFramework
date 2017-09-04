@@ -11,9 +11,16 @@ class Lff {
     static $Dao = null; //数据库访问对象
     static $Sao = null; //会话访问对象
     
-    public static function App(&$configs=null)
+    /*
+    * desc: 创建APP实例
+    *
+    *@configs --- arr  配置
+    *@forced  --- bool 强制新建
+    *
+    */
+    public static function App(&$configs=null, $forced=false)
     {
-        if(is_null(self::$App)) {
+        if(is_null(self::$App) || $forced) {
             self::$App = new CApp($configs);
         }
         return self::$App;

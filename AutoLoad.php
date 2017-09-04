@@ -43,7 +43,6 @@ class CAutoLoad {
 
     static function importIncludePath($pathArr)
     {
-        $PATHSPE = PATH_SEPARATOR; //冒号(:)
         foreach($pathArr as $path) {
             if((strpos($path,'*') || strpos($path,'+'))){
                 $last_char = substr($path,-1);
@@ -52,12 +51,12 @@ class CAutoLoad {
                 if(is_dir($path)){
                     self::walkdir($path, $subDirs, $depth);
                     foreach($subDirs as $subpath) {
-                        set_include_path(get_include_path().$PATHSPE.$subpath);
+                        set_include_path(get_include_path().PATH_SEPARATOR.$subpath);
                     }
                 }
                 unset($subDirs);
             }else{
-                set_include_path(get_include_path().$PATHSPE.$path);
+                set_include_path(get_include_path().PATH_SEPARATOR.$path);
             }
         }
         self::$IncludedDirs = get_include_path();
@@ -104,11 +103,11 @@ class CAutoLoad {
      * @return string|false 文件不存在返回false，存在返回绝对路径
      *
      */
-    static function fileExists($filename)
+    static function fileExists($file, &$place='')
     {
         // 检查是不是绝对路径
-        if(realpath($filename) == $filename) {
-            return $filename;
+        if(realpath($file) == $file) {
+            return $file;
         }
         //否则，当作相对路径判断处理
         /* 把获取到的include_path中的\替换成/
@@ -119,24 +118,26 @@ class CAutoLoad {
         $paths = explode(PATH_SEPARATOR, str_replace('\\', DIRECTORY_SEPARATOR, get_include_path()));
         foreach($paths as $path) {
             /*if(substr($path, -1) == '/') {
-                $fullpath = $path . $filename;
+                $fullpath = $path . $file;
             }else {
-                $fullpath = $path . '/' . $filename;
+                $fullpath = $path . '/' . $file;
             }*/
-            $path = rtrim($path,'/').'/'.$filename;
+            $path = rtrim($path,'/').'/'.$file;
             if(file_exists($path)) {
-                return realpath($path);
+                return $place = realpath($path);
             }
         }
         return false;
     }
 
-    static function AutoLoadFrameClass($class) 
+    static function AutoLoadFrameClass($clazz) 
     {
-        $class = ucfirst($class);
-        $cfile = $class . '.php';
-        if(self::fileExists($cfile)){
-            require $cfile;
+        if(strpos($clazz, '\\')){
+            $clazz = str_replace('\\', '/', $clazz);
+        }
+        $cfile = $clazz . '.php';
+        if(self::fileExists($cfile, $cfile)){
+            include $cfile;
         }
     }
 };

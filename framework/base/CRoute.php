@@ -8,9 +8,13 @@
 */
 abstract class CRoute extends CEle {
     
-    protected $configArr = array();
+    protected $configs    = array();
 
-    /*****************************URL中path的命名规范*********************/
+    protected $cgimode    = 1; //1:FPM,2:SWOOLE
+    protected $request    = null;
+    protected $response   = null;
+
+    /******************URL中path的命名规范***************/
     /*
     *                |-------------path-------|
     * 如果url: ...com/dir123/dir234/controller/action
@@ -23,36 +27,33 @@ abstract class CRoute extends CEle {
                                                       or
                                     route = path                   + action
                                   */
-    protected $appRoute   = null;
     protected $path       = null;
-    protected $directory  = null;
     protected $router     = null;
+    protected $appRoute   = null;
+    protected $directory  = null;
     protected $controller = null;
     protected $action     = null;
-    /**************************end URL中path的命名规范*********************/
+    /*************end URL中path的命名规范***************/
 
     protected $restArr   = array();
     protected $restful   = array(); //用于暂存
 
-    protected $URLMODE   = 2; //url style[1-compility, 2-REST]
+    protected $urlmode   = 2; //url style[1-compility, 2-REST]
 
     /*****************************环境变量参数规划************************/
     public $primaryLoc   = '';
 
     public $boot         = ''; //项目根目录(../../myproject)
     public $home         = ''; //当前根URL(http://www.demo.com)
-    public $subApp       = ''; //当前子项目名称(二级域名名称,如admin)
+    public $sub          = ''; //当前子项目名称(二级域名名称,如admin)
     public $ui           = ''; //当前子项目的ui(如:fluid)
 
-    public $subappLoc    = ''; //当前subApp目录
-    public $configLoc    = ''; //当前subApp下配置目录
-    public $viewLoc      = ''; //当前subApp下视图目录
-    public $ctrlLoc      = ''; //当前subApp下控制器目录
-    public $modelLoc     = ''; //当前subApp下模型目录
-    public $daoLoc       = ''; //dao目录
-    public $cacheLoc     = ''; //缓存目录
-    public $dataLoc      = ''; //数据目录
-    public $uiLoc        = '';
+    public $SubLoc       = ''; //当前sub目录
+    public $ViewLoc      = ''; //当前sub下视图目录
+    public $CtrlLoc      = ''; //当前sub下控制器目录
+    public $ModelLoc     = ''; //当前sub下模型目录
+    public $DaoLoc       = ''; //dao目录
+    public $UiLoc        = '';
 
     public $TPL_APP      = ''; //smarty模板目录
     public $TPL_SUB      = ''; //smarty模板目录
@@ -60,93 +61,66 @@ abstract class CRoute extends CEle {
     public $TPL_INC      = ''; //smarty模板目录
     public $TPL_LAY      = ''; //smarty模板目录
 
-    public $subappUrl    = ''; //指向当前subApp目录
-    public $assetsUrl    = ''; //指向当前subApp资源目录
-    public $uiUrl        = ''; //指向当前subApp下ui目录
-    public $jsUrl        = ''; //指向当前subApp下当前ui下的js目录
-    public $cssUrl       = ''; //指向当前subApp下当前ui下的css目录
-    public $imageUrl     = ''; //指向当前subApp下当前ui下的image目录
+    public $UiUrl        = ''; //指向当前sub下ui目录
+    public $SubUrl       = ''; //指向当前sub目录
+    public $AssetsUrl    = ''; //指向当前sub资源目录
     /*************************end 环境变量参数规划************************/
 
     public $routeKey     = 'path';    
     public $params       = array();    
-    
-    protected $routeAlias   = array(); //控制器方法别名
-    protected $routeMissing = null;    //当路不存在时的默认路由
-    
+        
     /*
     * desc: construct function
     *@configs --- array
     */
     public function __construct(&$configs)
     {
-        $this->trimConfig($configs);
+        $this->InitConfigs($this->configs=&$configs);
     }
-    private function trimConfig(&$configs)
+    private function InitConfigs(&$configs)
     {
-        $cfgArr = $this->_loadConfig($configs);
-        if(!isset($cfgArr['home']) || !isset($cfgArr['boot'])) {
-            exit('The baseUrl or baseLoc doesn\'t set!');
+        if(!isset($configs['boot'])) {
+            exit('The base location does not seted');
         }
-        $this->subApp       = isset($cfgArr['subApp'])?$cfgArr['subApp']:'primary';
-        $this->ui           = isset($cfgArr['ui'])?$cfgArr['ui']:'default'; //ui name
-        $this->URLMODE      = isset($cfgArr['URLMODE'])?$cfgArr['URLMODE']:2;
+        $this->ui           = isset($configs['ui'])?$configs['ui']:'default'; //ui name
+        $this->sub          = isset($configs['sub'])?$configs['sub']:'primary';
+        $this->urlmode      = isset($configs['urlmode'])?$configs['urlmode']:2;
         
-        $this->boot         = rtrim($cfgArr['boot'], '/');
-        $this->home         = rtrim($cfgArr['home'], '/');
+        $this->boot         = rtrim($configs['boot'], '/');
 
-        $this->dataLoc      = $this->boot.'/assets';
-        $this->assetsLoc    = $this->dataLoc;
-        $this->subappLoc    = $this->boot . '/'. $this->subApp;
+        $this->AssetsLoc    = $this->boot.'/assets';
+        $this->SubLoc       = $this->boot.'/'.$this->sub;
         
         $this->daoLoc       = $this->boot.'/dao';
         $this->primaryLoc   = $this->boot.'/primary'; //item = project
-        $this->ctrlLoc      = $this->_get_controller_location($this->subApp);//$this->subappLoc.'/controller';
-        $this->viewLoc      = $this->subappLoc.'/view';
-        $this->configLoc    = $this->subappLoc.'/config';
-        $this->modelLoc     = $this->subappLoc.'/model';
-        $this->cacheLoc     = $this->dataLoc.'/_cache';
+        $this->ctrlLoc      = $this->_get_controller_location($this->sub);//$this->SubLoc.'/controller';
+        $this->viewLoc      = $this->SubLoc.'/view';
+        $this->modelLoc     = $this->SubLoc.'/model';
 
-        $this->TPL_LOC      = ($this->getConfig('smarty', $this->boot)).'/smarty';
+        $this->TPL_LOC      = $this->getConfig('smarty',$this->boot).'/smarty';
         
-        // $this->assetsUrl    = $this->itemUrl.'/assets';
-        $this->assetsUrl    = '/assets'; //不用绝对路径是为了便于使用不同的域名
-        $this->jsUrl        = $this->assetsUrl .'/'. $this->subApp .'/js';
-        $this->cssUrl       = $this->assetsUrl .'/'. $this->subApp .'/css';
-        $this->imageUrl     = $this->assetsUrl .'/'. $this->subApp .'/images';
-        
-        isset($cfgArr['params']) && $this->params = $cfgArr['params'];
-        isset($cfgArr['routeAlias']) && $this->routeAlias = $cfgArr['routeAlias'];
-        isset($cfgArr['routeMissing']) && $this->routeMissing = $cfgArr['routeMissing'];
+        $this->AssetsUrl    = '/assets'; //不用绝对路径是为了便于使用不同的域名
 
-        $this->setUi($this->ui);
+        $this->SetUI($this->ui);
     }
-    public function setUi($ui='default')
+    public function SetUI($ui='default')
     {
         if(empty($ui))return;
         $this->ui = $ui;
 
-        $_ui_base_url  = $this->assetsUrl.'/ui';
-        $this->uiUrl   = $_ui_base_url.'/'.$ui;
+        $this->UiUrl   = $this->AssetsUrl.'/ui/'.$ui;
 
-        $this->uiLoc   = $this->assetsLoc.'/ui/'.$ui;
+        $this->UiLoc   = $this->AssetsLoc.'/ui/'.$ui;
 
+        $this->TPL_UI  = $this->TPL_LOC .'/'.$ui;
         $this->TPL_COM = $this->TPL_LOC .'/common';
-        // $this->TPL_SUB = $this->TPL_LOC .'/'. $this->subApp;
-        $this->TPL_UI  = $this->TPL_LOC .'/'. $ui;
         $this->TPL_INC = $this->TPL_UI .'/templates/include';
         $this->TPL_LAY = $this->TPL_UI .'/templates/layout';
     }
 
-    private function _get_controller_location($subApp=null)
+    private function _get_controller_location($sub=null)
     {
-        return $this->boot . '/'. ($subApp?$subApp:$this->subApp) . '/controller';
-    }
-
-    private function &_loadConfig(&$configs)
-    {
-        $this->configArr = &$configs;
-        return $configs;
+        return $this->boot .'/'. ($sub?$sub:$this->sub) . '/controller';
     }
     /*
     * desc: 加载公共自定义配置文件
@@ -186,23 +160,40 @@ abstract class CRoute extends CEle {
     public function getConfig($key=null, $default=null)
     {
         if(null === $key){
-            return $this->configArr;
+            return $this->configs;
         }
         if(strpos($key, '.')){
-            $vals = $this->configArr; //不要设置成引用，否则会改变configArr的值
+            $vals = $this->configs; //不要设置成引用，否则会改变configArr的值
             foreach(explode('.',$key) as $sub){
                 if(!isset($vals[$sub])) return $default;
                 $vals = $vals[$sub];
             }
             return $vals;
         }else{
-            return isset($this->configArr[$key])?$this->configArr[$key]:$default;
+            return isset($this->configs[$key])?$this->configs[$key]:$default;
         }
+    }
+    /*
+    * desc: 设置配置参数
+    *
+    */
+    public function setConfig($kvsOr, $val=null)
+    {
+        if(is_scalar($kvsOr)){
+            $kvsOr = array($kvsOr => $val);
+        }
+        foreach($kvsOr as $k=>$v){
+            $this->configs[$k] = $v;
+            if('ui' == $k){
+                $this->SetUI($v);
+            }
+        }
+        return $this->configs[$k];
     }
     public function getUserConfig($key=null, $default=null)
     {
-        $cfgArr = &$this->configArr;
-        $userConfig = isset($cfgArr['user'])?$cfgArr['user']:null;
+        $configs = &$this->configs;
+        $userConfig = isset($configs['user'])?$configs['user']:null;
         if(null === $key){
             return $userConfig;
         }
@@ -243,8 +234,8 @@ abstract class CRoute extends CEle {
     }
     /*
     * func: get default routor
-    * desc: 1, if subApp is 'primary' then default routor is 'site'
-    *       2, if subApp isn't 'primary' then default routor is subApp
+    * desc: 1, if sub is 'primary' then default routor is 'site'
+    *       2, if sub isn't 'primary' then default routor is sub
     */
     private function _get_default_controller_name($directory='')
     {
@@ -260,26 +251,9 @@ abstract class CRoute extends CEle {
                 }
             }
         }else{
-            $subApp = $this->subApp;
-            return 'primary'==$subApp?'site':$subApp;
+            $sub = $this->sub;
+            return 'primary'==$sub?'site':$sub;
         }
-    }
-    // format request url
-    public function trimReq()
-    {
-        $sArr = $_SERVER;
-        $baseUrl  = $this->baseUrl;
-        $fullUrl  = 'http://'.$sArr['HTTP_HOST'].$sArr['REQUEST_URI'];
-        $assetUrl = $baseUrl .'/'.'assets';
-        $imgUrl   = $assetUrl.'/'.'imgs';
-        $jsUrl    = $assetUrl.'/'.'js';
-        $cssUrl   = $assetUrl.'/'.'cs';
-        
-        $this->fullUrl  = $fullUrl;
-        $this->assetUrl = $assetUrl;
-        $this->imgUrl   = $imgUrl;
-        $this->jsUrl    = $jsUrl;
-        $this->cssUrl   = $cssUrl;
     }
     /**
     * author: cty@20120326
@@ -307,7 +281,7 @@ abstract class CRoute extends CEle {
             }
             $route = isset($uArr['path'])?$uArr['path']:'';
         }
-        $baseUrl = $prex?$prex:$this->home;
+        $baseUrl = $prex?$prex:$this->getConfig('home','/');
         if(80 != $port){
             $baseUrl  = str_replace(':'.$port, '', $baseUrl);
             $baseUrl .= ':'.$port;
@@ -336,7 +310,7 @@ abstract class CRoute extends CEle {
         $route = trim($route,'/');
         $query = http_build_query($paraArr);
         $query = (strlen($query)>0)?'&'.$query:'';
-        if(2 == $this->URLMODE) {
+        if(2 == $this->urlmode) {
             $query    = trim($query, '&');
             $routeUrl = $baseUrl.'/'.$route.'?'.$query.$anchor;
         }else {
@@ -475,10 +449,10 @@ abstract class CRoute extends CEle {
     *                                    | --- KConsultion->actionAsk(如果actionAsk存在)
             /consultion/ask            --                 ->actionEntry(如果actionAsk不存在,ask作为参数)
     */
-    function runRoute($route=null, $parameters=null, $manulrouted=false, $subApp=null)
+    function runRoute($route=null, $parameters=null, $manulrouted=false, $sub=null)
     {
         $route = trim($this->getRoute($route), '/');
-        $ctrlLoc = $this->_get_controller_location($subApp);
+        $ctrlLoc = $this->_get_controller_location($sub);
         if(!isset($route[0])) {//route is a string
             return $this->runDCA($ctrlLoc,null,null,null,null,$parameters);
         }
@@ -532,9 +506,9 @@ abstract class CRoute extends CEle {
         //至此说明在路由中没找到controller和action=====end
         // $this->fatalError(); //没有找到相应action
     }
-    function runRouteEx($route=null, $subApp=null)
+    function runRouteEx($route=null, $sub=null)
     {
-        $this->runRoute($route, null, true, $subApp);
+        $this->runRoute($route, null, true, $sub);
     }
 
     function runRouteApi($route=null, $parameters=null)
@@ -557,9 +531,13 @@ abstract class CRoute extends CEle {
         }
         $controllerClass = 'K'. ucfirst($controller);
         $controller_file = $ctrlLoc. '/'. $dirs. 'K'. ucfirst($controller).'.php';
+
         if(is_file($controller_file)){
             // require $controller_file;
-            $this->requireOnce($controller_file);
+            $clazz = $this->requireOnce($controller_file);
+            if(strpos($clazz, '\\')){
+                $controllerClass = $clazz;
+            }
             if(class_exists($controllerClass,false)){
                 $realAction  = 'action'.ucfirst($action);
                 if(!method_exists($controllerClass, $realAction)){
@@ -651,7 +629,7 @@ abstract class CRoute extends CEle {
     }
     public function getAppName()
     {
-        return $this->subApp;
+        return $this->sub;
     }
     /*
     * desc: 以下几个函数是和CRoute中的4个函进行对比
@@ -700,9 +678,21 @@ abstract class CRoute extends CEle {
         }
         return $v;
     }
+    public function files()
+    {
+        if($this->request){
+            return $this->request->files;
+        }
+        return $_FILES;
+    }
     function get($key, $default=null, $strict=true, $filter=null)
     {
-        $v = isset($_GET[$key])?rawurldecode($_GET[$key]):$default;
+        if($this->request){
+            $iGET = &$this->request->get;
+        }else{
+            $iGET = &$_GET;
+        }
+        $v = isset($iGET[$key])?rawurldecode($iGET[$key]):$default;
         $v = $this->_val_safize($v, $filter);
         if($strict){
             $v = $v?$v:$default;
@@ -730,8 +720,13 @@ abstract class CRoute extends CEle {
     }
     function post($key, $default=null, $strict=false, $filter=null)
     {
+        if($this->request){
+            $iPOST = &$this->request->post;
+        }else{
+            $iPOST = &$_POST;
+        }
         $key = trim($key);
-        $_v  = isset($_POST[$key])?$_POST[$key]:$default;
+        $_v  = isset($iPOST[$key])?$iPOST[$key]:$default;
         if(is_array($_v))return $_v;
         $_v  = empty($_v)?$_v:rawurldecode($_v);
         $_v  = $this->_val_safize($_v, $filter);
@@ -755,6 +750,11 @@ abstract class CRoute extends CEle {
     */
     function posts($keys, $filter=null, $strict=false, $default=null)
     {
+        if($this->request){
+            $iPOST = &$this->request->post;
+        }else{
+            $iPOST = &$_POST;
+        }
         $keys    = trim($keys, ',');
         $keyArr  = explode(',', $keys);
         $dataArr = array();
@@ -762,7 +762,7 @@ abstract class CRoute extends CEle {
         foreach($keyArr as $key){
             $key = trim($key);
             if('*' == $key){
-                $dataArr = array_merge($dataArr, $_POST);
+                $dataArr = array_merge($dataArr, $iPOST);
             }else{
                 if('^' == $key[0]){
                     $nonkArr[] = trim($key, '^');
@@ -962,9 +962,26 @@ abstract class CRoute extends CEle {
             return intval($_SERVER[$key]);
         }elseif(isset($_SERVER['HTTP_X_REAL_PORT'])){
             return intval($_SERVER['HTTP_X_REAL_PORT']);
+        }elseif(isset($_SERVER['X_REAL_PORT'])){
+            return intval($_SERVER['X_REAL_PORT']);
         }elseif(isset($_SERVER['SERVER_PORT'])){
             return intval($_SERVER['SERVER_PORT']);
         }
         return 80;
+    }
+    /*
+    *desc: url redirection
+    *
+    */
+    function location($url=null)
+    {
+        if(!$url)$url = '/';
+        $this->cleanBuffer();
+        if($this->response){
+            $this->response->header("location", $url);
+            $this->response->status(302);
+        }else{
+            header("Location: {$url}");
+        }
     }
 };

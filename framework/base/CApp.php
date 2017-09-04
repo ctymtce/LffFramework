@@ -9,10 +9,13 @@
 
 class CApp extends CRoute {
 
-    public $name        = '';
-    public $charset     = 'UTF-8';
+    protected $cgimode  = 1; //1:FPM,2:SWOOLE
+    protected $request  = null;
+    protected $response = null;
+
+
+    private $charset    = 'UTF-8';
     
-    private $html       = null;
     private $redis      = null;
     
     private $mail       = null;
@@ -22,25 +25,37 @@ class CApp extends CRoute {
     public function __construct(&$configs)
     {
         parent::__construct($configs);
-        // Lff::setApp($this);
     
-        /*
-        $this->preinit();
-    
-        $this->initSystemHandlers();
-        $this->registerCoreComponents();
-    
-        $this->configure($config);
-        $this->attachBehaviors($this->behaviors);
-        $this->preloadComponents();
-    
-        $this->init(); */
+        $this->PreInit(); //预初始化
     }
-    
-    public function run($route=null, $parameters=null)
-    { 
-        $this->init();
-        $this->appLanuch($route, $parameters);
+    /*
+    * desc: 一些常用初始化工作(待完善)
+    *
+    *
+    */
+    public function PreInit()
+    {
+        date_default_timezone_set(
+            $this->getConfig('timezone','Asia/shanghai')
+        );
+    }
+    public function Run($route=null, $parameters=null, $configs=null)
+    {
+        if(is_array($configs) && count($configs)>0){
+            $this->setConfig($configs);
+        }
+        if($this->getConfig('session_start', true)){
+            $this->StartupSession();
+        }
+        return $this->appLanuch($route, $parameters);
+    }
+    public function Event($request, $response, $extras=array())
+    {
+        $this->cgimode  = 2;
+        $this->request  = $request;
+        $this->response = $response;
+        $route = $this->request['request_uri'];
+        return $this->Run($route, $parameters, $configs);
     }
     private function appLanuch($route=null, $parameters=null)
     {
@@ -51,37 +66,26 @@ class CApp extends CRoute {
         if($ROUTE_PREFIX = $this->getConfig('ROUTE_PREFIX')){
             $route = '/'.$ROUTE_PREFIX.'/'.ltrim($route,'/');
         }
-        $this->runRoute($route, $parameters);
+        // file_put_contents('/home/app/sites/game5v5test/sess/r.log', $route."\n", FILE_APPEND);
+        return $this->runRoute($route, $parameters);
     }
-
-    /*
-    * desc: 一些常用初始化工作(待完善)
-    *
-    *
-    */
-    public function init()
-    {
-        date_default_timezone_set('Asia/shanghai');
-        if($this->getConfig('session_start',true)){
-            $this->startSession();
-        }
-        
-    }   
     public function getTimeZone()
     {
         return date_default_timezone_get();
     }
     public function setTimeZone($value='Asia/Shanghai')
     {
-        date_default_timezone_set($value);
+        return date_default_timezone_set($value);
     }
 
-    public function startSession()
+    public function StartupSession()
     {
         $sessionid = $this->getConfig('session_id');
         $sessiondm = $this->getConfig('session_domain');
         $sessionep = $this->getConfig('session_expire',0);
         $session   = $this->getSession();
+        $this->cleanBuffer();
+        $session->options($this->getConfig('session_options'));
         $session->start($sessionid, $sessiondm, $sessionep);
     }
     
@@ -130,13 +134,13 @@ class CApp extends CRoute {
         }
         
         $class = 'M'.ucfirst($modelId);
-        $subApp = null===$subApp?$this->subApp:$subApp;
+        $subApp = null===$subApp?$this->sub:$subApp;
         $id = $subdirs.'_'.$class. '_'. $subApp;
         if(isset($this->Arr726128772794766[$id]) && is_object($this->Arr726128772794766[$id])){
             //防止重复加载以提高效率
             return $this->Arr726128772794766[$id];
         }
-        $modelId   = trim($modelId, '/');
+        $modelId = trim($modelId, '/');
         // $modelLoc  = Lff::app()->modelLoc;
         
         if($subApp){
@@ -172,6 +176,20 @@ class CApp extends CRoute {
     public function LoadDaoModel()
     {
         return Lff::Dao();
+    }
+    /*
+    * desc: 加载库
+    *
+    */
+    public function LoadLib($lib, $dir='libs')
+    {
+        if(!isset($this->Sin872616794272776)){
+            $this->Sin872616794272776 = null;
+            $clazz = 'C'.ucfirst($lib);
+            $libfile = $this->requireOnce(__DIR__.'/../'.$dir.'/'.$clazz.'.php');
+            $this->Sin872616794272776 = new $clazz;
+        }
+        return $this->Sin872616794272776;
     }
     //end database model
     /*

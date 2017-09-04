@@ -10,26 +10,82 @@ abstract class CEle {
 
     function __call($method, $args)
     {
-        /*if(0 === strpos($method, 'smarty_')){
-            $app = $this->LoadSmarty();
-            $method = str_replace('smarty_', '', $method);
-        }else{
-            $app = Lff::$App;
-        }
-        if(0===strpos($method,'LoadApiModel') && strlen($method)>12){
-            $args[] = strtolower(substr($method,12));
-            $method = 'LoadApiModel';
-        }*/
-        if(method_exists(Lff::App(), $method)) {
-            return call_user_func_array(array(Lff::App(),$method), $args);
-        }else{
-            if(0 === strpos($method, 'smarty_')){
-                $app = $this->LoadSmarty();
-                $method = str_replace('smarty_', '', $method);
-                return call_user_func_array(array($app,$method), $args);
+        $caller = $this->getCaller();
+        if(!$caller) $caller = Lff::App();
+        if(method_exists($caller, $method)) {
+            switch(count($args))
+            {   //to compatible old php versions and imporve performance
+                case 0: return $caller->$method();
+                case 1: return $caller->$method($args[0]);
+                case 2: return $caller->$method($args[0],$args[1]);
+                case 3: return $caller->$method($args[0],$args[1],$args[2]);
+                case 4: return $caller->$method($args[0],$args[1],$args[2],$args[3]);
+                case 5: return $caller->$method($args[0],$args[1],$args[2],$args[3],$args[4]);
+                case 6: return $caller->$method($args[0],$args[1],$args[2],$args[3],$args[4],$args[5]);
+                default: return call_user_func_array(array($caller, $method), $args);
             }
+        }else{
             $this->Exception('The function "'.$method.'" does not exists');
         }
+    }
+    /*
+    * desc: 获取调用者的祖先
+    *
+    */
+    public function getCaller($property='cgimode')
+    {
+        //获取调用对象
+        if(isset($this->caller)) {
+            return $this->caller;
+        }
+        //there may be Exception called by in __destruct function if u explicitly exit program,
+        //because __destruct's caller is by PHP's inner system.
+        $traces = debug_backtrace();
+        // print_r($traces);
+        do{
+            $caller = array_pop($traces);
+            if(isset($caller['object'])){
+                if($property){
+                    if(property_exists($caller['object'], $property)){
+                        break;
+                    }
+                }else{
+                    break;
+                }
+            }
+        }while($traces);
+        if(!isset($caller['object'])) return false;
+        if($property){
+            if(property_exists($caller['object'], $property)){
+                return $this->caller = $caller['object'];
+            }
+        }else{
+            return $this->caller = $caller['object'];
+        }
+        return false;
+    }
+    /*
+    * desc: 以下两个方法是获取请求/响应对象
+    *       为了兼容旧版本，故加ing作区别
+    *
+    */
+    public function getRequesting()
+    {
+        $caller = $this->getCaller();
+        if(!$caller) return false;
+        if(!property_exists($caller,'request')) {
+            return false;
+        }
+        return $caller->request;
+    }
+    public function getResponding()
+    {
+        $caller = $this->getCaller();
+        if(!$caller) return false;
+        if(!property_exists($caller,'response')) {
+            return false;
+        }
+        return $caller->response;
     }
     public function cleanBuffer()
     {
@@ -120,12 +176,13 @@ abstract class CEle {
     {
         $this->debug($val, $exit);
     }
-    public function requireOnce($filename)
+    public function requireOnce($file)
     {
-        if(!isset($GLOBALS['rqo_'.$filename])){
-            $GLOBALS['rqo_'.$filename]=1;
-            return include($filename);
+        $filekey = 'rqo_'.$file;
+        if(!isset($GLOBALS[$filekey])){
+            $GLOBALS[$filekey] = include($file);
         }
+        return $GLOBALS[$filekey];
     }
 
     /*
