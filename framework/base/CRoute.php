@@ -377,7 +377,11 @@ abstract class CRoute extends CEle {
     }
     function getRequest($prefix='/')
     {
-        $uri = isset($_SERVER['REQUEST_URI'])?$_SERVER['REQUEST_URI']:'';
+        if(is_object($this->request)){
+            $uri = &$this->request->server['request_uri'];
+        }else{
+            $uri = isset($_SERVER['REQUEST_URI'])?$_SERVER['REQUEST_URI']:'';
+        }
         if($uri){
             while(strpos($uri, '//')){
                 $uri = str_replace('//', '/', $uri);
@@ -391,6 +395,8 @@ abstract class CRoute extends CEle {
     }
     /*
     * desc: 获取路由
+    *
+    *@route --- str cgi初始化时不要将route传进来(cli时可以传)
     *
     *return     http://www.test.me/search/20/b/3?a=t
     *       --->/search/20/b/3
@@ -878,16 +884,21 @@ abstract class CRoute extends CEle {
     }
     public function getHeader($keys, $prex='HTTP_')
     {
+        if(is_object($this->request)){
+            $iSERVER = &$this->request->server;
+        }else{
+            $iSERVER = &$_SERVER;
+        }
         if(is_array($keys)){
             $headerArr = array();
             foreach($keys as $key){
                 $key = $prex . strtoupper($key);
-                $headerArr[] = isset($_SERVER[$key])?$_SERVER[$key]:null;
+                $headerArr[] = isset($iSERVER[$key])?$iSERVER[$key]:null;
             }
             return $headerArr;
         }else{
             $key = $prex . strtoupper($keys);
-            return isset($_SERVER[$key])?$_SERVER[$key]:null;
+            return isset($iSERVER[$key])?$iSERVER[$key]:null;
         }
     }
     public function parseUrl($url)
@@ -898,7 +909,7 @@ abstract class CRoute extends CEle {
     }
     public function urlAddPara($key, $val, $url=null)
     {
-        if(!is_string($url)) $url = $_SERVER['REQUEST_URI'];
+        if(!is_string($url)) $url = $this->getRequestUri();
     
         $locArr = parse_url($url);
         // print_r($locArr);
@@ -933,19 +944,24 @@ abstract class CRoute extends CEle {
     */
     function ip($def=null, $key=null)
     {
-        if($key && isset($_SERVER[$key])){
-            return $_SERVER[$key];
-        }elseif(isset($_SERVER['HTTP_X_FORWARDED_FOR'])){
-            if(strpos($_SERVER['HTTP_X_FORWARDED_FOR'], ',')){//多级反向代理
-                return strstr($_SERVER['HTTP_X_FORWARDED_FOR'], ',', true);
+        if(is_object($this->request)){
+            $iSERVER = &$this->request->server;
+        }else{
+            $iSERVER = &$_SERVER;
+        }
+        if($key && isset($iSERVER[$key])){
+            return $iSERVER[$key];
+        }elseif(isset($iSERVER['HTTP_X_FORWARDED_FOR'])){
+            if(strpos($iSERVER['HTTP_X_FORWARDED_FOR'], ',')){//多级反向代理
+                return strstr($iSERVER['HTTP_X_FORWARDED_FOR'], ',', true);
             }
-            return $_SERVER['HTTP_X_FORWARDED_FOR'];
-        }elseif(isset($_SERVER['HTTP_X_REAL_IP'])){
-            return $_SERVER['HTTP_X_REAL_IP'];
-        }elseif(isset($_SERVER['REMOTE_ADDR'])){
-            return $_SERVER['REMOTE_ADDR'];
-        }elseif(isset($_SERVER['SERVER_ADDR'])){
-            return $_SERVER['SERVER_ADDR'];
+            return $iSERVER['HTTP_X_FORWARDED_FOR'];
+        }elseif(isset($iSERVER['HTTP_X_REAL_IP'])){
+            return $iSERVER['HTTP_X_REAL_IP'];
+        }elseif(isset($iSERVER['REMOTE_ADDR'])){
+            return $iSERVER['REMOTE_ADDR'];
+        }elseif(isset($iSERVER['SERVER_ADDR'])){
+            return $iSERVER['SERVER_ADDR'];
         }
         return $def?$def:'127.0.0.1';
     }
@@ -958,14 +974,19 @@ abstract class CRoute extends CEle {
         if($port = $this->getConfig('port')){
             return $port;
         }
-        if($key && isset($_SERVER[$key])){
-            return intval($_SERVER[$key]);
-        }elseif(isset($_SERVER['HTTP_X_REAL_PORT'])){
-            return intval($_SERVER['HTTP_X_REAL_PORT']);
-        }elseif(isset($_SERVER['X_REAL_PORT'])){
-            return intval($_SERVER['X_REAL_PORT']);
-        }elseif(isset($_SERVER['SERVER_PORT'])){
-            return intval($_SERVER['SERVER_PORT']);
+        if(is_object($this->request)){
+            $iSERVER = &$this->request->server;
+        }else{
+            $iSERVER = &$_SERVER;
+        }
+        if($key && isset($iSERVER[$key])){
+            return intval($iSERVER[$key]);
+        }elseif(isset($iSERVER['HTTP_X_REAL_PORT'])){
+            return intval($iSERVER['HTTP_X_REAL_PORT']);
+        }elseif(isset($iSERVER['X_REAL_PORT'])){
+            return intval($iSERVER['X_REAL_PORT']);
+        }elseif(isset($iSERVER['SERVER_PORT'])){
+            return intval($iSERVER['SERVER_PORT']);
         }
         return 80;
     }

@@ -49,13 +49,12 @@ class CApp extends CRoute {
         }
         return $this->appLanuch($route, $parameters);
     }
-    public function Event($request, $response, $extras=array())
+    public function Event($request, $response, $extras=array(), $params=null)
     {
         $this->cgimode  = 2;
         $this->request  = $request;
         $this->response = $response;
-        $route = $this->request['request_uri'];
-        return $this->Run($route, $parameters, $configs);
+        return $this->Run(null, $params, $extras);
     }
     private function appLanuch($route=null, $parameters=null)
     {
