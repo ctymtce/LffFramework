@@ -119,6 +119,9 @@ abstract class CEle {
     }
     public function writeFile($filename, $logs, $mod='a')
     {
+        if(function_exists('Swoole_Async_writeFile')){
+            return Swoole_Async_writeFile($filename, $logs, null, FILE_APPEND);
+        }
         return file_put_contents($filename, $logs, FILE_APPEND);
     }
     public function writeLog($logs, $basename, $prex='', $mod="a")
