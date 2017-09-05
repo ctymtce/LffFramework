@@ -885,7 +885,7 @@ abstract class CRoute extends CEle {
     public function getHeader($keys, $prex='HTTP_')
     {
         if(is_object($this->request)){
-            $iSERVER = &$this->request->server;
+            $iSERVER = $iSERVER = array_change_key_case($this->request->server, CASE_UPPER);;
         }else{
             $iSERVER = &$_SERVER;
         }
@@ -945,7 +945,7 @@ abstract class CRoute extends CEle {
     function ip($def=null, $key=null)
     {
         if(is_object($this->request)){
-            $iSERVER = &$this->request->server;
+            $iSERVER = array_change_key_case($this->request->server, CASE_UPPER);
         }else{
             $iSERVER = &$_SERVER;
         }
@@ -974,8 +974,8 @@ abstract class CRoute extends CEle {
         if($port = $this->getConfig('port')){
             return $port;
         }
-        if(is_object($this->request)){
-            $iSERVER = &$this->request->server;
+        if(2 == $this->cgimode){
+            $iSERVER = array_change_key_case($this->request->server, CASE_UPPER);
         }else{
             $iSERVER = &$_SERVER;
         }
@@ -1003,6 +1003,29 @@ abstract class CRoute extends CEle {
             $this->response->status(302);
         }else{
             header("Location: {$url}");
+        }
+    }
+    function method()
+    {
+        if(2 == $this->cgimode){
+            return $this->request->server['request_method'];
+        }else{
+            return isset($_SERVER['REQUEST_METHOD'])?$_SERVER['REQUEST_METHOD']:'GET';
+        }
+    }
+    function isPost()
+    {
+        return 'POST'==$this->method()?true:false;
+    }
+    protected function getRef()
+    {
+        if(2 == $this->cgimode){
+            return isset($this->request->server['referer'])?$this->request->server['referer']:null;
+        }else{
+            return isset($_SERVER['HTTP_REFERER'])?
+                $_SERVER['HTTP_REFERER']:(
+                isset($_SERVER['REFERER'])?$_SERVER['REFERER']:null
+            );
         }
     }
 };

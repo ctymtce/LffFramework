@@ -167,8 +167,7 @@ class CSession extends CEle{
     function get($key, $default=null)
     {
         $sesses = $this->read($this->getSessionId());
-        if(!$sesses || !isset($sesses[$key])) return $default;
-        return $sesses[$key];
+        return isset($sesses[$key])?$sesses[$key]:$default;
     }
 
     function gets($keys, $default=null)
@@ -183,16 +182,24 @@ class CSession extends CEle{
     }
     function all()
     {
-        return isset($_SESSION)?$_SESSION:array();
+        return $this->read($this->getSessionId());
     }
-    function set($key, $val)
+    function set($kvs, $val=null)
     {
         $sessId = $this->getSessionId();
         $sesses = $this->read($sessId);
-        if(!$sesses || !is_array($sesses)) {
+
+        if(empty($sesses) || !is_array($sesses)) {
             $sesses = array();
         }
-        $sesses[$key] = $val;
+        if(is_array($kvs)){
+            foreach($kvs as $k=>$v){
+                $sesses[$k] = $v;
+            }
+        }else{
+            $sesses[$kvs] = $val;
+        }
+
         $ok = $this->write($sessId, $sesses);
         return $ok?$val:false;
     }

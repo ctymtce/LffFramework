@@ -232,8 +232,11 @@ abstract class CCtrl extends CEle {
     {
         if($this->_is_assigned_common_variable) return;
         $session = $this->getSession();
-        foreach($session->all() as $k=>$v){
-            $this->assign($k, $v);
+        $sessArr = $session->all();
+        if(is_array($sessArr)){
+            foreach($sessArr as $k=>$v){
+                $this->assign($k, $v);
+            }
         }
         
         // list($top_column, $sec_column) = $this->getColumn();
