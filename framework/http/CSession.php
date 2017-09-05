@@ -81,12 +81,13 @@ class CSession extends CEle{
      */
     public function write($id, $data)
     {
-        $file = $this->_get_file($id);
+        return file_put_contents($this->_get_file($id), serialize($data));
+        /*$file = $this->_get_file($id);
         if(2 == $this->cgimode && is_file($file)){
             return Swoole_Async_writeFile($file, serialize($data));
         }else{
             return file_put_contents($file, serialize($data));
-        }
+        }*/
     }
     private function _get_file($id)
     {
