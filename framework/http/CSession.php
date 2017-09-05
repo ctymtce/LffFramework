@@ -1,6 +1,7 @@
 <?php
 class CSession extends CEle{
-    private $cgimode = 1;
+    protected $cgimode = 1;
+    
     private $cookie  = 'PHPSESSEX';
     private $domain  = null;
     private $folder  = '/tmp/sessions';
