@@ -61,7 +61,7 @@ class CSession extends CEle{
         if(!is_file($file)){
             // echo "create: $file\n";
             $this->write($sessId, array());
-            chmod($file, 0755);
+            // chmod($file, 0755);
         }else{
             // var_dump('yyyyyyyyyyy');
         }
@@ -81,7 +81,11 @@ class CSession extends CEle{
      */
     public function write($id, $data)
     {
-        return file_put_contents($this->_get_file($id), serialize($data));
+        if(function_exists('Swoole_Async_writeFile')){
+            return Swoole_Async_writeFile($this->_get_file($id), serialize($data));
+        }else{
+            return file_put_contents($this->_get_file($id), serialize($data));
+        }
     }
     private function _get_file($id)
     {
@@ -210,160 +214,5 @@ class CSession extends CEle{
     function clean()
     {
         return $this->destroy($this->getSessionId());
-    }
-
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-class CSession2 {
-
-    private $cookie = 'TMPSESSID';
-    private $domain = null;
-
-    /*
-    * desc: 启动session
-    *
-    *@sid 这里的sid其实是一个后辍
-    *
-    */
-    function start($sid=null, $domain=null, $expired=0)
-    {
-        $this->domain = $domain;
-        if($sid){
-            $sid = $this->getSid($sid, $domain, $expired);
-            session_id($sid);
-        }
-        if(!isset($_SESSION)){
-            var_dump('nnnnnnnnnnnn');
-            if($expired > 0) {
-                ini_set('session.cookie_lifetime', $expired);
-            }
-            session_start();
-            $_SESSION['tttt'] = 'aaaaaaaaaaaaaa';
-        }else{
-            var_dump('yyyyyyyyyyy');
-        }
-        var_dump($_SESSION);
-    }
-
-    /*
-    * desc: 生成sessionid
-    *
-    */
-    function getSid($suff='', $domain=null, $expired=0)
-    {
-        $cookie = $this->cookie;
-        if(isset($_COOKIE[$cookie])){//TMPSESSID
-            $sid = $_COOKIE[$cookie];
-        }else{
-            $sid = mt_rand(10000000,99999999).'-'.mt_rand(10000000,99999999);
-            if(empty($domain)){
-                $domain = isset($_SERVER['SERVER_NAME'])?$_SERVER['SERVER_NAME']:null;
-            }
-            $expired = $expired > 0 ? time()+$expired : 0;
-            // setcookie($cookie, $sid, $expired, '/', $domain);
-            Cgi::Cookie($cookie, $sid);
-        }
-        return strtoupper(md5($sid.$suff));
-    }
-
-    function get($key, $default=null)
-    {
-        if(isset($_SESSION[$key])) return $_SESSION[$key];
-        return $default;
-    }
-
-    function gets($keys, $default=null)
-    {
-        $keys = trim($keys, ',');
-        $keyArr  = explode(',', $keys);
-        $dataArr = array();
-        foreach($keyArr as $key){
-            $dataArr[$key] = $this->get($key, $default);
-        }
-        return $dataArr;
-    }
-    function all()
-    {
-        return isset($_SESSION)?$_SESSION:array();
-    }
-    function set($key, $val)
-    {
-        return $_SESSION[$key] = $val;
-    }
-
-    function sets($kvArr)
-    {   
-        foreach($kvArr as $key => $value) {
-            $_SESSION[$key] = $value;
-        }
-    }
-
-    function add($key, $val)
-    {
-        return $this->set($key, $val);
-    }
-
-    function remove($key)
-    {
-        if(isset($_SESSION[$key])) unset($_SESSION[$key]);
-    }
-    function clean()
-    {
-        session_destroy();
-    }
-
-    function setCookie($key, $val, $expired=0, $path='/')
-    {
-        $domain = $this->domain;
-        return setcookie($key, $val, $expired, $path, $domain);
-    }
-    function getCookie($key, $default=null)
-    {
-        return (isset($_COOKIE[$key]))?$_COOKIE[$key]:null;
-    }
-
-    function pushMessage($msg)
-    {
-        $_SESSION['___sessionMessage'] = $msg;
-    }
-    function flushMessage()
-    {
-        if(isset($_SESSION['___sessionMessage'])){
-            $msg = $_SESSION['___sessionMessage'];
-            unset($_SESSION['___sessionMessage']);
-            return $msg;
-        }
-        return null;
-    }
-    function pushUrl($url)
-    {
-        $this->set('___sessionUrl', $url);
-    }
-    function flushUrl()
-    {
-        $url = $this->get('___sessionUrl');
-        $this->remove('___sessionUrl');
-        return $url;
     }
 };

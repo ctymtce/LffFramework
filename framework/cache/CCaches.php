@@ -15,10 +15,17 @@ class CCaches {
         $id = self::mkId($id);
         $cacheFile = self::getFile($id, $group);
         $jVal = json_encode(array($val));
-        if(false !== file_put_contents($cacheFile, $jVal, LOCK_EX)) {
-            chmod($cacheFile, 0755);
-            touch($cacheFile, time()+$expire);
-            return true;
+        if(function_exists('Swoole_Async_writeFile')){
+            return Swoole_Async_writeFile($filename, $logs, function($file){
+                chmod($file, 0755);
+                touch($file, time()+$expire);
+            });
+        }else{
+            if(false !== file_put_contents($cacheFile, $jVal, LOCK_EX)) {
+                chmod($cacheFile, 0755);
+                touch($cacheFile, time()+$expire);
+                return true;
+            }
         }
         return false;
     }

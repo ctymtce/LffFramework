@@ -180,15 +180,19 @@ class CApp extends CRoute {
     * desc: 加载库
     *
     */
-    public function LoadLib($lib, $dir='libs')
+    public function LoadLib($lib)
     {
-        if(!isset($this->Sin872616794272776)){
-            $this->Sin872616794272776 = null;
+        if(!isset($this->Arr872616794272776[$lib])){
             $clazz = 'C'.ucfirst($lib);
-            $libfile = $this->requireOnce(__DIR__.'/../'.$dir.'/'.$clazz.'.php');
-            $this->Sin872616794272776 = new $clazz;
+            $file  = __DIR__.'/../libs/'.$clazz.'.php';
+            if(!is_file($file)) return false;
+            $ok = $this->requireOnce($file);
+            if($ok){
+                return $this->Arr872616794272776[$lib] = new $clazz;
+            }
+            return false;
         }
-        return $this->Sin872616794272776;
+        return $this->Arr872616794272776[$lib];
     }
     //end database model
     /*
