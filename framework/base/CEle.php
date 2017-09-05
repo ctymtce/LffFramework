@@ -7,6 +7,7 @@
  * 
 */
 abstract class CEle {
+    protected $cgimode  = 1; //1:FPM,2:SWOOLE
 
     function __call($method, $args)
     {
@@ -119,7 +120,7 @@ abstract class CEle {
     }
     public function writeFile($filename, $logs, $mod='a')
     {
-        if(function_exists('Swoole_Async_writeFile')){
+        if(2 == $this->cgimode){
             return Swoole_Async_writeFile($filename, $logs, null, FILE_APPEND);
         }
         return file_put_contents($filename, $logs, FILE_APPEND);

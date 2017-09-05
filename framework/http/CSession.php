@@ -1,10 +1,10 @@
 <?php
 class CSession extends CEle{
-
-    private $cookie = 'PHPSESSEX';
-    private $domain = null;
-    private $folder = '/tmp/sessions';
-    private $prefix = 'PHPS_';
+    private $cgimode = 1;
+    private $cookie  = 'PHPSESSEX';
+    private $domain  = null;
+    private $folder  = '/tmp/sessions';
+    private $prefix  = 'PHPS_';
 
     public function options($options=array()){
         if(!is_array($options))return;
@@ -16,6 +16,9 @@ class CSession extends CEle{
         }
         if(isset($options['session_cookie'])){
             $this->cookie = $options['session_cookie'];
+        }
+        if(isset($options['cgimode'])){
+            $this->cgimode = $options['cgimode'];
         }
     }
 
@@ -59,11 +62,7 @@ class CSession extends CEle{
         }
 
         if(!is_file($file)){
-            // echo "create: $file\n";
             $this->write($sessId, array());
-            // chmod($file, 0755);
-        }else{
-            // var_dump('yyyyyyyyyyy');
         }
         return true;
     }
@@ -81,10 +80,11 @@ class CSession extends CEle{
      */
     public function write($id, $data)
     {
-        if(function_exists('Swoole_Async_writeFile')){
-            return Swoole_Async_writeFile($this->_get_file($id), serialize($data));
+        $file = $this->_get_file($id);
+        if(2 == $this->cgimode && is_file($file)){
+            return Swoole_Async_writeFile($file, serialize($data));
         }else{
-            return file_put_contents($this->_get_file($id), serialize($data));
+            return file_put_contents($file, serialize($data));
         }
     }
     private function _get_file($id)
