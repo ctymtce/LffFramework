@@ -14,6 +14,8 @@ class CApp extends CRoute {
     protected $response = null;
 
 
+    private $session    = null;
+
     private $charset    = 'UTF-8';
     
     private $redis      = null;
@@ -101,7 +103,10 @@ class CApp extends CRoute {
     
     public function getSession()
     {
-        return Lff::Sao();
+        if(is_null($this->session)){
+            $this->session = new CSession();
+        }
+        return $this->session;
     }
 
     /***********************plugin**************************/
