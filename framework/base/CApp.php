@@ -90,6 +90,14 @@ class CApp extends CRoute {
         $session->options($options);
         $session->start($sessionid, $sessiondm, $sessionep);
     }
+    /*
+    * desc: just to use swoole's Swoole_Async_writeFile
+    *
+    */
+    public function writeLogEx($logs, $basename, $prex='', $mod="a")
+    {
+        return $this->writeLog($logs, $basename, $prex, $mod);
+    }
     
     public function getSession()
     {

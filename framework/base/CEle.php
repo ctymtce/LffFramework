@@ -115,7 +115,7 @@ abstract class CEle {
             if('cli' == PHP_SAPI){
                 $prefix = $suffix = '';
             }
-            exit(printf("%s%s%s", $prefix, $e->getMessage()."\n".$e->getTraceAsString(), $suffix));
+            return printf("%s%s%s", $prefix, $e->getMessage()."\n".$e->getTraceAsString(), $suffix);
         }
     }
     public function writeFile($filename, $logs, $mod='a')
