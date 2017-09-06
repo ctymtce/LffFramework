@@ -141,7 +141,7 @@ class CSession extends CEle{
                 return $request->cookie[$cookie];
             }else{
                 $sid = md5($mixId.uniqid(mt_rand(100000,999999),true));
-                $request->cookie[$cookie] = $cookie;
+                $request->cookie[$cookie] = $sid;
                 $response->cookie($cookie, $sid/*, $expired, '/', $domain*/);
                 return $sid;
             }
@@ -154,7 +154,7 @@ class CSession extends CEle{
                     $domain = isset($_SERVER['SERVER_NAME'])?$_SERVER['SERVER_NAME']:null;
                 }
                 $expired = $expired > 0 ? time()+$expired : 0;*/
-                $_COOKIE[$cookie] = $cookie;
+                $_COOKIE[$cookie] = $sid;
                 setCookie($cookie, $sid, $expired, '/', $domain);
                 return $sid;
             }
