@@ -135,6 +135,7 @@ class CAutoLoad {
         if(strpos($clazz, '\\')){
             $clazz = str_replace('\\', '/', $clazz);
         }
+        if(class_exists($clazz,false))return;
         $cfile = $clazz . '.php';
         if(self::fileExists($cfile, $cfile)){
             include $cfile;

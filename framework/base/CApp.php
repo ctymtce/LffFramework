@@ -195,6 +195,9 @@ class CApp extends CRoute {
     {
         if(!isset($this->Arr872616794272776[$lib])){
             $clazz = 'C'.ucfirst($lib);
+            if(class_exists($clazz,false)){
+                return $this->Arr872616794272776[$lib] = new $clazz;
+            }
             $file  = __DIR__.'/../libs/'.$clazz.'.php';
             if(!is_file($file)) return false;
             $ok = $this->requireOnce($file);
