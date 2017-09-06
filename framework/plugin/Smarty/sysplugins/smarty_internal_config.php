@@ -229,7 +229,7 @@ class Smarty_Internal_Config {
             }
         }
         $_config_vars = array();
-        include($this->getCompiledFilepath());
+        require_once($this->getCompiledFilepath());
         // copy global config vars
         foreach ($_config_vars['vars'] as $variable => $value) {
             if ($this->smarty->config_overwrite || !isset($scope_ptr->config_vars[$variable])) {

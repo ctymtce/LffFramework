@@ -344,7 +344,7 @@ class Smarty_Internal_Template extends Smarty_Internal_TemplateBase {
                 foreach ($this->required_plugins['compiled'] as $tmp) {
                     foreach ($tmp as $data) {
                         $file = addslashes($data['file']);
-                        $plugins_string .= "if (!is_callable('{$data['function']}')) include '{$file}';\n";
+                        $plugins_string .= "if (!is_callable('{$data['function']}')) include_once '{$file}';\n";
                     }
                 }
                 $plugins_string .= '?>';
@@ -355,7 +355,7 @@ class Smarty_Internal_Template extends Smarty_Internal_TemplateBase {
                 foreach ($this->required_plugins['nocache'] as $tmp) {
                     foreach ($tmp as $data) {
                         $file = addslashes($data['file']);
-                        $plugins_string .= addslashes("if (!is_callable('{$data['function']}')) include '{$file}';\n");
+                        $plugins_string .= addslashes("if (!is_callable('{$data['function']}')) include_once '{$file}';\n");
                     }
                 }
                 $plugins_string .= "?>/*/%%SmartyNocache:{$this->properties['nocache_hash']}%%*/';?>\n";
@@ -648,7 +648,7 @@ class Smarty_Internal_Template extends Smarty_Internal_TemplateBase {
 
             case 'cached':
                 if (!class_exists('Smarty_Template_Cached')) {
-                    include SMARTY_SYSPLUGINS_DIR . 'smarty_cacheresource.php';
+                    include_once SMARTY_SYSPLUGINS_DIR . 'smarty_cacheresource.php';
                 }
                 $this->cached = new Smarty_Template_Cached($this);
                 return $this->cached;

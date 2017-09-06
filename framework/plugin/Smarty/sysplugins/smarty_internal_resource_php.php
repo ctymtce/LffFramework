@@ -106,7 +106,7 @@ class Smarty_Internal_Resource_PHP extends Smarty_Resource_Uncompiled {
 
         // include PHP template with short open tags enabled
         ini_set( 'short_open_tag', '1' );
-        include($source->filepath);
+        require_once($source->filepath);
         ini_set( 'short_open_tag', $this->short_open_tag );
     }
 }

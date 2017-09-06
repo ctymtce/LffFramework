@@ -1316,7 +1316,6 @@ class Smarty extends Smarty_Internal_TemplateBase {
             );
             foreach ($names as $file) {
                 if (file_exists($file)) {
-                    // require($file);
                     requireOnce($file);
                     return $file;
                 }
@@ -1329,7 +1328,6 @@ class Smarty extends Smarty_Internal_TemplateBase {
                     }
                     
                     if ($file !== false) {
-                        // require($file);
                         requireOnce($file);
                         return $file;
                     }
@@ -1536,6 +1534,6 @@ function smartyAutoload($class)
     );
 
     if (!strncmp($_class, 'smarty_internal_', 16) || isset($_classes[$_class])) {
-        include SMARTY_SYSPLUGINS_DIR . $_class . '.php';
+        include_once SMARTY_SYSPLUGINS_DIR . $_class . '.php';
     }
 }

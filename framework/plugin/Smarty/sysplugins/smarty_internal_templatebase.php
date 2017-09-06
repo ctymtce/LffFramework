@@ -158,11 +158,11 @@ abstract class Smarty_Internal_TemplateBase extends Smarty_Internal_Data {
                         Smarty_Internal_Debug::start_render($_template);
                     }
                     if (!$_template->compiled->loaded) {
-                        include($_template->compiled->filepath);
+                        require_once($_template->compiled->filepath);
                         if ($_template->mustCompile) {
                             // recompile and load again
                             $_template->compileTemplateSource();
-                            include($_template->compiled->filepath);
+                            require_once($_template->compiled->filepath);
                         }
                         $_template->compiled->loaded = true;
                     } else {
