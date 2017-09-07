@@ -162,7 +162,7 @@ abstract class Smarty_Internal_TemplateBase extends Smarty_Internal_Data {
                         if ($_template->mustCompile) {
                             // recompile and load again
                             $_template->compileTemplateSource();
-                            include_once($_template->compiled->filepath);
+                            include($_template->compiled->filepath);
                         }
                         $_template->compiled->loaded = true;
                     } else {
