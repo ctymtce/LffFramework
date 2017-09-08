@@ -132,7 +132,7 @@ class CSession extends CEle{
 
         if($request && $response){ //SWOOLE MODE
             if(isset($request->cookie[$cookie]) && $expired>0){
-                if(strtotime(substr($request->cookie[$cookie],5,14))+$expired < time()){
+                if(strtotime(substr($request->cookie[$cookie],0,14))+$expired < time()){
                     $file = $this->_get_file($request->cookie[$cookie]);
                     if(is_file($file))@unlink($file);
                     unset($request->cookie[$cookie]);
@@ -148,7 +148,7 @@ class CSession extends CEle{
             }
         }else{//FPM MODE
             if(isset($_COOKIE[$cookie]) && $expired>0){
-                if(strtotime(substr($_COOKIE[$cookie],5,14))+$expired < time()){
+                if(strtotime(substr($_COOKIE[$cookie],0,14))+$expired < time()){
                     $file = $this->_get_file($_COOKIE[$cookie]);
                     if(is_file($file))@unlink($file);
                     unset($_COOKIE[$cookie]);
