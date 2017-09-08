@@ -10,7 +10,7 @@ class CSession extends CEle{
     public function options($options=array()){
         if(!is_array($options))return;
         if(isset($options['session_dir'])){
-            $this->folder = $options['session_dir'];
+            // $this->folder = $options['session_dir'];
         }
         if(isset($options['session_prefix'])){
             $this->prefix = $options['session_prefix'];
@@ -49,13 +49,6 @@ class CSession extends CEle{
         $sessId = $this->getSessionId($mixId, $domain, $expired);
 
         $file = $this->_get_file($sessId);
-        if(is_file($file) && $expired) { //expired
-            if(filectime($file)+$expired < time()){
-                echo "delete: $file\n";
-                unlink($file);
-                return $this->start($mixId,$domain,$expired);
-            }
-        }
 
         if(!$this->init($sessId, $error)){
             throw new Exception($error, 1);
@@ -70,28 +63,29 @@ class CSession extends CEle{
     /**
      * @inheritDoc
      */
-    public function read($id)
+    public function read($sessId)
     {
-        if(file_exists($this->folder . '/' . $id)) {
-            return $_SESSION = unserialize(file_get_contents($this->folder . '/' . $id));
+        $file = $this->_get_file($sessId);
+        if(file_exists($file)) {
+            return $_SESSION = json_decode(file_get_contents($file),true);
         }
     }
     /**
      * @inheritDoc
      */
-    public function write($id, $data)
+    public function write($sessId, $data)
     {
-        return file_put_contents($this->_get_file($id), serialize($data));
-        /*$file = $this->_get_file($id);
+        return file_put_contents($this->_get_file($sessId), json_encode($data));
+        /*$file = $this->_get_file($sessId);
         if(2 == $this->cgimode && is_file($file)){
-            return Swoole_Async_writeFile($file, serialize($data));
+            return Swoole_Async_writeFile($file, json_encode($data));
         }else{
-            return file_put_contents($file, serialize($data));
+            return file_put_contents($file, json_encode($data));
         }*/
     }
-    private function _get_file($id)
+    private function _get_file($sessId)
     {
-        return $this->folder.'/'.$id;
+        return $this->folder.'/'.$this->prefix.$sessId;
     }
     /**
      * @inheritDoc
@@ -137,6 +131,13 @@ class CSession extends CEle{
         $response = $this->getResponding();
 
         if($request && $response){ //SWOOLE MODE
+            if(isset($request->cookie[$cookie]) && $expired>0){
+                if(strtotime(substr($request->cookie[$cookie],-14))+$expired < time()){
+                    $file = $this->_get_file($request->cookie[$cookie]);
+                    if(is_file($file))@unlink($file);
+                    unset($request->cookie[$cookie]);
+                }
+            }
             if(isset($request->cookie[$cookie])){//TMPSESSID
                 return $request->cookie[$cookie];
             }else{
@@ -146,23 +147,28 @@ class CSession extends CEle{
                 return $sid;
             }
         }else{//FPM MODE
+            if(isset($_COOKIE[$cookie]) && $expired>0){
+                if(strtotime(substr($_COOKIE[$cookie],-14))+$expired < time()){
+                    $file = $this->_get_file($_COOKIE[$cookie]);
+                    if(is_file($file))@unlink($file);
+                    unset($_COOKIE[$cookie]);
+                }
+            }
             if(isset($_COOKIE[$cookie])){//TMPSESSID
                 return $_COOKIE[$cookie];
             }else{
-                $sid = md5($mixId.uniqid(mt_rand(100000,999999),true));
-                /*if(empty($domain)){
-                    $domain = isset($_SERVER['SERVER_NAME'])?$_SERVER['SERVER_NAME']:null;
-                }
-                $expired = $expired > 0 ? time()+$expired : 0;*/
+                $sid  = md5($mixId.uniqid(mt_rand(100000,999999),true));
+                $sid .= date('YmdHis');
+                /*$expired = $expired > 0 ? time()+$expired+10 : 0;*/
                 $_COOKIE[$cookie] = $sid;
-                setCookie($cookie, $sid, $expired, '/', $domain);
+                setCookie($cookie, $sid, 0, '/', $domain); //client neednt expired
                 return $sid;
             }
         }
     }
     function getSessionId($mixId=null, $domain=null, $expired=0)
     {
-        return $this->prefix.$this->getCookieId($mixId);
+        return $this->getCookieId($mixId, $domain, $expired);
     }
 
     function get($key, $default=null)
