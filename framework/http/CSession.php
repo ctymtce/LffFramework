@@ -145,7 +145,7 @@ class CSession extends CEle{
             }else{
                 $sid  = date('YmdHis').md5(uniqid(mt_rand(100000,999999),true));
                 $request->cookie[$cookie] = $sid;
-                $response->cookie($cookie, $sid, 0, '/', $this->domain);
+                $response->cookie($cookie, $sid, time()+$this->expire+2592000, '/', $this->domain);//a month
                 return $sid;
             }
         }else{//FPM MODE
@@ -162,7 +162,7 @@ class CSession extends CEle{
                 $sid  = date('YmdHis').md5(uniqid(mt_rand(100000,999999),true));
                 /*$expire = $this->expire > 0 ? time()+$this->expire+10 : 0;*/
                 $_COOKIE[$cookie] = $sid;
-                setCookie($cookie, $sid, 0, '/', $this->domain); //client neednt expire
+                setCookie($cookie, $sid, time()+$this->expire+2592000, '/', $this->domain); //client neednt expire
                 return $sid;
             }
         }
