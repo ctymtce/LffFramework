@@ -90,7 +90,7 @@ class CApp extends CRoute {
         if(!is_array($options)) $options = array();
         $options['cgimode'] = $this->cgimode;
         $session->options($options);
-        $session->start($sessionid, $sessiondm, $sessionep);
+        $session->start($sessiondm, $sessionep);
     }
     /*
     * desc: just to use swoole's Swoole_Async_writeFile

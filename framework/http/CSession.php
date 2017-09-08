@@ -2,15 +2,16 @@
 class CSession extends CEle{
     protected $cgimode = 1;
     
-    private $cookie  = 'PHPSESSEX';
     private $domain  = null;
-    private $folder  = '/tmp/sessions';
+    private $expire  = 0;
+    private $cookie  = 'PHPSESSEX';
+    private $folder  = '/tmp/sessions_demo';
     private $prefix  = 'PHPS_';
 
     public function options($options=array()){
         if(!is_array($options))return;
         if(isset($options['session_dir'])){
-            $this->folder = $options['session_dir'];
+            // $this->folder = $options['session_dir'];
         }
         if(isset($options['session_prefix'])){
             $this->prefix = $options['session_prefix'];
@@ -43,10 +44,11 @@ class CSession extends CEle{
     *@sid 这里的sid其实是一个后辍
     *
     */
-    function start($mixId=null, $domain=null, $expired=86400)
+    function start($domain=null, $expire=0)
     {
         $this->domain = $domain;
-        $sessId = $this->getSessionId($mixId, $domain, $expired);
+        $this->expire = $expire;
+        $sessId = $this->getSessionId();
 
         $file = $this->_get_file($sessId);
 
@@ -123,16 +125,16 @@ class CSession extends CEle{
     * desc: 生成sessionid
     *
     */
-    function getCookieId($mixId=null, $domain=null, $expired=0)
+    function getCookieId()
     {
         $cookie   = $this->cookie;
 
         $request  = $this->getRequesting();
         $response = $this->getResponding();
 
-        if($request && $response){ //SWOOLE MODE
-            if(isset($request->cookie[$cookie]) && $expired>0){
-                if(strtotime(substr($request->cookie[$cookie],0,14))+$expired < time()){
+        if(is_object($request) && is_object($response)){ //SWOOLE MODE
+            if(isset($request->cookie[$cookie]) && $expire>0){
+                if(strtotime(substr($request->cookie[$cookie],0,14))+$this->expire < time()){
                     $file = $this->_get_file($request->cookie[$cookie]);
                     if(is_file($file))@unlink($file);
                     unset($request->cookie[$cookie]);
@@ -141,14 +143,14 @@ class CSession extends CEle{
             if(isset($request->cookie[$cookie])){//TMPSESSID
                 return $request->cookie[$cookie];
             }else{
-                $sid  = date('YmdHis').md5($mixId.uniqid(mt_rand(100000,999999),true));
+                $sid  = date('YmdHis').md5(uniqid(mt_rand(100000,999999),true));
                 $request->cookie[$cookie] = $sid;
-                $response->cookie($cookie, $sid/*, $expired, '/', $domain*/);
+                $response->cookie($cookie, $sid, 0, '/', $this->domain);
                 return $sid;
             }
         }else{//FPM MODE
-            if(isset($_COOKIE[$cookie]) && $expired>0){
-                if(strtotime(substr($_COOKIE[$cookie],0,14))+$expired < time()){
+            if(isset($_COOKIE[$cookie]) && $this->expire>0){
+                if(strtotime(substr($_COOKIE[$cookie],0,14))+$this->expire < time()){
                     $file = $this->_get_file($_COOKIE[$cookie]);
                     if(is_file($file))@unlink($file);
                     unset($_COOKIE[$cookie]);
@@ -157,17 +159,17 @@ class CSession extends CEle{
             if(isset($_COOKIE[$cookie])){//TMPSESSID
                 return $_COOKIE[$cookie];
             }else{
-                $sid  = date('YmdHis').md5($mixId.uniqid(mt_rand(100000,999999),true));
-                /*$expired = $expired > 0 ? time()+$expired+10 : 0;*/
+                $sid  = date('YmdHis').md5(uniqid(mt_rand(100000,999999),true));
+                /*$expire = $this->expire > 0 ? time()+$this->expire+10 : 0;*/
                 $_COOKIE[$cookie] = $sid;
-                setCookie($cookie, $sid, 0, '/', $domain); //client neednt expired
+                setCookie($cookie, $sid, 0, '/', $this->domain); //client neednt expire
                 return $sid;
             }
         }
     }
-    function getSessionId($mixId=null, $domain=null, $expired=0)
+    function getSessionId()
     {
-        return $this->getCookieId($mixId, $domain, $expired);
+        return $this->getCookieId();
     }
 
     function get($key, $default=null)
