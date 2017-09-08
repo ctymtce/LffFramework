@@ -133,7 +133,7 @@ class CSession extends CEle{
         $response = $this->getResponding();
 
         if(is_object($request) && is_object($response)){ //SWOOLE MODE
-            if(isset($request->cookie[$cookie]) && $expire>0){
+            if(isset($request->cookie[$cookie]) && $this->expire>0){
                 if(strtotime(substr($request->cookie[$cookie],0,14))+$this->expire < time()){
                     $file = $this->_get_file($request->cookie[$cookie]);
                     if(is_file($file))@unlink($file);

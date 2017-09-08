@@ -1001,6 +1001,8 @@ abstract class CRoute extends CEle {
         if($this->response){
             $this->response->header("location", $url);
             $this->response->status(302);
+            $this->response->end('');
+            throw new RuntimeExitException('redirect->'. $url);
         }else{
             header("Location: {$url}");
         }
