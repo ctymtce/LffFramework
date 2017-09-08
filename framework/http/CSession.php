@@ -10,7 +10,7 @@ class CSession extends CEle{
     public function options($options=array()){
         if(!is_array($options))return;
         if(isset($options['session_dir'])){
-            // $this->folder = $options['session_dir'];
+            $this->folder = $options['session_dir'];
         }
         if(isset($options['session_prefix'])){
             $this->prefix = $options['session_prefix'];
