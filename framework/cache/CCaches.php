@@ -16,7 +16,7 @@ class CCaches {
         $cacheFile = self::getFile($id, $group);
         $jVal = json_encode(array($val));
         if(class_exists('Cgi',0) && 2==Cgi::Mode){
-            return Swoole_Async_writeFile($filename, $logs, function($file){
+            return Swoole_Async_writeFile($filename, $jVal, function($file){
                 chmod($file, 0755);
                 touch($file, time()+$expire);
             });
