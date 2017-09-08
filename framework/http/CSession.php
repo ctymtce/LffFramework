@@ -132,7 +132,7 @@ class CSession extends CEle{
 
         if($request && $response){ //SWOOLE MODE
             if(isset($request->cookie[$cookie]) && $expired>0){
-                if(strtotime(substr($request->cookie[$cookie],-14))+$expired < time()){
+                if(strtotime(substr($request->cookie[$cookie],5,14))+$expired < time()){
                     $file = $this->_get_file($request->cookie[$cookie]);
                     if(is_file($file))@unlink($file);
                     unset($request->cookie[$cookie]);
@@ -141,15 +141,14 @@ class CSession extends CEle{
             if(isset($request->cookie[$cookie])){//TMPSESSID
                 return $request->cookie[$cookie];
             }else{
-                $sid  = md5($mixId.uniqid(mt_rand(100000,999999),true));
-                $sid .= date('YmdHis');
+                $sid  = date('YmdHis').md5($mixId.uniqid(mt_rand(100000,999999),true));
                 $request->cookie[$cookie] = $sid;
                 $response->cookie($cookie, $sid/*, $expired, '/', $domain*/);
                 return $sid;
             }
         }else{//FPM MODE
             if(isset($_COOKIE[$cookie]) && $expired>0){
-                if(strtotime(substr($_COOKIE[$cookie],-14))+$expired < time()){
+                if(strtotime(substr($_COOKIE[$cookie],5,14))+$expired < time()){
                     $file = $this->_get_file($_COOKIE[$cookie]);
                     if(is_file($file))@unlink($file);
                     unset($_COOKIE[$cookie]);
@@ -158,8 +157,7 @@ class CSession extends CEle{
             if(isset($_COOKIE[$cookie])){//TMPSESSID
                 return $_COOKIE[$cookie];
             }else{
-                $sid  = md5($mixId.uniqid(mt_rand(100000,999999),true));
-                $sid .= date('YmdHis');
+                $sid  = date('YmdHis').md5($mixId.uniqid(mt_rand(100000,999999),true));
                 /*$expired = $expired > 0 ? time()+$expired+10 : 0;*/
                 $_COOKIE[$cookie] = $sid;
                 setCookie($cookie, $sid, 0, '/', $domain); //client neednt expired
