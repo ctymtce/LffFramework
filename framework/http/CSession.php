@@ -5,13 +5,13 @@ class CSession extends CEle{
     private $domain  = null;
     private $expire  = 0;
     private $cookie  = 'PHPSESSEX';
-    private $folder  = '/tmp/sessions_demo';
+    private $folder  = '/tmp/sessions';
     private $prefix  = 'PHPS_';
 
     public function options($options=array()){
         if(!is_array($options))return;
         if(isset($options['session_dir'])){
-            // $this->folder = $options['session_dir'];
+            $this->folder = $options['session_dir'];
         }
         if(isset($options['session_prefix'])){
             $this->prefix = $options['session_prefix'];
