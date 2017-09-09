@@ -41,7 +41,8 @@ class CSession extends CEle{
     /*
     * desc: 启动session
     *
-    *@sid 这里的sid其实是一个后辍
+    *@domain --- str 域名
+    *@expire --- int 过期时间
     *
     */
     function start($domain=null, $expire=0)
@@ -62,9 +63,12 @@ class CSession extends CEle{
         }
         return true;
     }
-    /**
-     * @inheritDoc
-     */
+    /*
+    * desc: 读取session
+    *
+    *@sessId --- str session id
+    *
+    */
     public function read($sessId)
     {
         $file = $this->_get_file($sessId);
@@ -72,9 +76,12 @@ class CSession extends CEle{
             return $_SESSION = json_decode(file_get_contents($file),true);
         }
     }
-    /**
-     * @inheritDoc
-     */
+    /*
+    * desc: 写入session
+    *
+    *@sessId --- str session id
+    *
+    */
     public function write($sessId, $data)
     {
         return file_put_contents($this->_get_file($sessId), json_encode($data));
@@ -89,40 +96,30 @@ class CSession extends CEle{
     {
         return $this->folder.'/'.$this->prefix.$sessId;
     }
-    /**
-     * @inheritDoc
-     */
-    public function destroy($id)
+    /*
+    * desc: 销毁session
+    *
+    *@sessId --- str session id
+    *
+    */
+    public function destroy($sessId)
     {
-        if($file = $this->_get_file($id)) {
+        if($file = $this->_get_file($sessId)) {
             return @unlink($file);
         }else {
             return false;
         }
     }
-    /**
-     * @inheritDoc
-     */
-    public function timeout($timeout=30)
-    {
-        $this->timeout = $timeout;
-    }
+    /*
+    * desc: 回收session(待续)
+    *
+    */
     private function gc()
     {
-        /*$iterator = new \DirectoryIterator($this->path);
-        $now = time();
-        foreach ($iterator as $file) {
-            if ($file->isDot()) {
-                continue;
-            }
-            if ($file->getMTime() < $now - $this->timeout) {
-                @unlink($file->getRealPath());
-            }
-        }*/
     }
 
     /*
-    * desc: 生成sessionid
+    * desc: 获取或生成cookie id
     *
     */
     function getCookieId()
@@ -144,8 +141,9 @@ class CSession extends CEle{
                 return $request->cookie[$cookie];
             }else{
                 $sid  = date('YmdHis').md5(uniqid(mt_rand(100000,999999),true));
+                $expire = $this->expire > 0 ? time()+$this->expire+2592000 : 0;
                 $request->cookie[$cookie] = $sid;
-                $response->cookie($cookie, $sid, time()+$this->expire+2592000, '/', $this->domain);//a month
+                $response->cookie($cookie, $sid, $expire, '/', $this->domain);//a month
                 return $sid;
             }
         }else{//FPM MODE
@@ -160,9 +158,9 @@ class CSession extends CEle{
                 return $_COOKIE[$cookie];
             }else{
                 $sid  = date('YmdHis').md5(uniqid(mt_rand(100000,999999),true));
-                /*$expire = $this->expire > 0 ? time()+$this->expire+10 : 0;*/
+                $expire = $this->expire > 0 ? time()+$this->expire+2592000 : 0;
                 $_COOKIE[$cookie] = $sid;
-                setCookie($cookie, $sid, time()+$this->expire+2592000, '/', $this->domain); //client neednt expire
+                setCookie($cookie, $sid, $expire, '/', $this->domain); //client neednt expire
                 return $sid;
             }
         }
