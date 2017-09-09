@@ -138,7 +138,7 @@ class CSession extends CEle{
     * desc: 回收session(待续)
     *
     */
-    private function gc($dir=null)
+    public function gc($dir=null)
     {
         if(is_null($dir)) $dir = $this->folder;
         $handler = opendir($dir);
@@ -149,7 +149,7 @@ class CSession extends CEle{
             if(is_dir($realpath)){
                 $this->gc($realpath);
             }elseif(0 === strpos($file, 'PHPS_')) {
-                if(strtotime(substr($file,0,14))+$this->expire < time()){
+                if(strtotime(substr($file,5,14))+$this->expire < time()){
                     if(is_file($realpath))@unlink($realpath);
                 }
             }
