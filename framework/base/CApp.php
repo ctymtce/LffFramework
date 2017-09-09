@@ -81,16 +81,13 @@ class CApp extends CRoute {
 
     public function StartupSession()
     {
-        $sessionid = $this->getConfig('session_id');
-        $sessiondm = $this->getConfig('session_domain');
-        $sessionep = $this->getConfig('session_expire',0);
         $session   = $this->getSession();
         $this->cleanBuffer();
         $options = $this->getConfig('session_options');
         if(!is_array($options)) $options = array();
         $options['cgimode'] = $this->cgimode;
         $session->options($options);
-        $session->start($sessiondm, $sessionep);
+        $session->start();
     }
     /*
     * desc: just to use swoole's Swoole_Async_writeFile

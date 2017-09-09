@@ -28,6 +28,12 @@ class CSession extends CEle{
         if(isset($options['session_cookie'])){
             $this->cookie = $options['session_cookie'];
         }
+        if(isset($options['session_domain'])){
+            $this->domain = $options['session_domain'];
+        }
+        if(isset($options['session_expire'])){
+            $this->expire = $options['session_expire'];
+        }
         if(isset($options['cgimode'])){
             $this->cgimode = $options['cgimode'];
         }
@@ -54,10 +60,8 @@ class CSession extends CEle{
     *@expire --- int 过期时间
     *
     */
-    function start($domain=null, $expire=0)
+    function start()
     {
-        $this->domain = $domain;
-        $this->expire = $expire;
         $this->enable = true;
 
         if($this->_is_gc > 0){//是否回收
