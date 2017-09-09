@@ -7,6 +7,9 @@ class CSession extends CEle{
     private $cookie  = 'PHPSESSEX';
     private $folder  = '/tmp/sessions';
     private $prefix  = 'PHPS_';
+    private $suffix  = '';
+    private $enable  = false;
+    private $_is_gc  = 0;
 
     public function options($options=array()){
         if(!is_array($options))return;
@@ -15,6 +18,12 @@ class CSession extends CEle{
         }
         if(isset($options['session_prefix'])){
             $this->prefix = $options['session_prefix'];
+        }
+        if(isset($options['session_suffix'])){
+            $this->suffix = $options['session_suffix'];
+        }
+        if(isset($options['session_gc'])){
+            $this->_is_gc = intval($options['session_gc']);
         }
         if(isset($options['session_cookie'])){
             $this->cookie = $options['session_cookie'];
@@ -49,6 +58,18 @@ class CSession extends CEle{
     {
         $this->domain = $domain;
         $this->expire = $expire;
+        $this->enable = true;
+
+        if($this->_is_gc > 0){//是否回收
+            if(mt_rand(1,100) <= $this->_is_gc){//回收概率
+                if(2 == $this->cgimode){
+                    swoole_timer_after(1, array($this,'gc'));
+                }else{
+                    $this->gc();//清理
+                }
+            }
+        }
+
         $sessId = $this->getSessionId();
 
         $file = $this->_get_file($sessId);
@@ -71,6 +92,7 @@ class CSession extends CEle{
     */
     public function read($sessId)
     {
+        if(!$this->enable) return false;
         $file = $this->_get_file($sessId);
         if(file_exists($file)) {
             return $_SESSION = json_decode(file_get_contents($file),true);
@@ -84,6 +106,7 @@ class CSession extends CEle{
     */
     public function write($sessId, $data)
     {
+        if(!$this->enable) return false;
         return file_put_contents($this->_get_file($sessId), json_encode($data));
         /*$file = $this->_get_file($sessId);
         if(2 == $this->cgimode && is_file($file)){
@@ -115,8 +138,23 @@ class CSession extends CEle{
     * desc: 回收session(待续)
     *
     */
-    private function gc()
+    private function gc($dir=null)
     {
+        if(is_null($dir)) $dir = $this->folder;
+        $handler = opendir($dir);
+        while(false !== ($file=readdir($handler)))
+        {
+            if('.'==$file || '..'==$file || 'System Volume Information'==$file) continue;
+            $realpath = rtrim($dir,'/').'/'.$file;
+            if(is_dir($realpath)){
+                $this->gc($realpath);
+            }elseif(0 === strpos($file, 'PHPS_')) {
+                if(strtotime(substr($file,0,14))+$this->expire < time()){
+                    if(is_file($realpath))@unlink($realpath);
+                }
+            }
+        }
+        return closedir($handler);
     }
 
     /*
@@ -125,6 +163,7 @@ class CSession extends CEle{
     */
     function getCookieId()
     {
+        if(!$this->enable) return false;
         $cookie   = $this->cookie;
 
         $request  = $this->getRequesting();
@@ -141,7 +180,7 @@ class CSession extends CEle{
             if(isset($request->cookie[$cookie])){//TMPSESSID
                 return $request->cookie[$cookie];
             }else{
-                $sid  = date('YmdHis').md5(uniqid(mt_rand(100000,999999),true));
+                $sid  = date('YmdHis').md5(uniqid(mt_rand(100000,999999),true)).$this->suffix;
                 $expire = $this->expire > 0 ? time()+$this->expire+2592000 : 0;
                 $request->cookie[$cookie] = $sid;
                 $response->cookie($cookie, $sid, $expire, '/', $this->domain);//a month
@@ -158,7 +197,7 @@ class CSession extends CEle{
             if(isset($_COOKIE[$cookie])){//TMPSESSID
                 return $_COOKIE[$cookie];
             }else{
-                $sid  = date('YmdHis').md5(uniqid(mt_rand(100000,999999),true));
+                $sid  = date('YmdHis').md5(uniqid(mt_rand(100000,999999),true)).$this->suffix;
                 $expire = $this->expire > 0 ? time()+$this->expire+2592000 : 0;
                 $_COOKIE[$cookie] = $sid;
                 setCookie($cookie, $sid, $expire, '/', $this->domain); //client neednt expire
