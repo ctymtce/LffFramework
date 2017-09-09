@@ -30,7 +30,7 @@ class CSession extends CEle{
             return false;
         }
         if(!file_exists($this->folder)) {
-            @mkdir($this->path, 0755, true);
+            @mkdir($this->folder, 0755, true);
         }
         if(!file_exists($this->folder) || !is_writable($this->folder)) {
             $error = 'Session directory is unwritable';
@@ -104,7 +104,8 @@ class CSession extends CEle{
     */
     public function destroy($sessId)
     {
-        if($file = $this->_get_file($sessId)) {
+        $file = $this->_get_file($sessId);
+        if(is_file($file)) {
             return @unlink($file);
         }else {
             return false;
