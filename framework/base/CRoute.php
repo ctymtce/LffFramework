@@ -885,7 +885,7 @@ abstract class CRoute extends CEle {
     public function getHeader($keys, $prex='HTTP_')
     {
         if(is_object($this->request)){
-            $iSERVER = $iSERVER = array_change_key_case($this->request->server, CASE_UPPER);;
+            $iSERVER = array_change_key_case($this->request->server, CASE_UPPER);;
         }else{
             $iSERVER = &$_SERVER;
         }
@@ -994,7 +994,7 @@ abstract class CRoute extends CEle {
     *desc: url redirection
     *
     */
-    function location($url=null)
+    function location($url=null, $ending=true)
     {
         if(!$url)$url = '/';
         $this->cleanBuffer();
@@ -1005,6 +1005,7 @@ abstract class CRoute extends CEle {
             // throw new RuntimeExitException('redirect->'. $url);
         }else{
             header("Location: {$url}");
+            if($ending)exit(0);
         }
     }
     function method()
