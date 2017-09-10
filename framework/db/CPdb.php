@@ -32,12 +32,27 @@ abstract class CPdb {
     protected function connect($paraArr=array(), $reconnect=false)
     {
         if(null === $this->pdb || $reconnect) {
-            extract($paraArr);
+            /*extract($paraArr);
             $this->dsn    = isset($dsn)?$dsn:$this->dsn;
             $this->user   = isset($user)?$user:$this->user;
             $this->pswd   = isset($pswd)?$pswd:$this->pswd;
             $this->alias  = isset($alias)?$alias:$this->alias;
-            $this->driver = isset($driver)?$driver:$this->driver;
+            $this->driver = isset($driver)?$driver:$this->driver;*/
+            if(isset($paraArr['dsn'])){
+                $this->dsn = $paraArr['dsn'];
+            }
+            if(isset($paraArr['user'])){
+                $this->user = $paraArr['user'];
+            }
+            if(isset($paraArr['pswd'])){
+                $this->pswd = $paraArr['pswd'];
+            }
+            if(isset($paraArr['alias'])){
+                $this->alias = $paraArr['alias'];
+            }
+            if(isset($paraArr['driver'])){
+                $this->driver = $paraArr['driver'];
+            }
             try {
                 $this->pdb = new PDO($this->dsn, $this->user, $this->pswd, array(PDO::ATTR_TIMEOUT=>3));
             }catch(PDOException $e){
