@@ -54,7 +54,11 @@ abstract class CPdb {
                 $this->driver = $paraArr['driver'];
             }
             try {
-                $this->pdb = new PDO($this->dsn, $this->user, $this->pswd, array(PDO::ATTR_TIMEOUT=>3));
+                $this->pdb = new PDO($this->dsn, $this->user, $this->pswd, array(
+                        PDO::ATTR_TIMEOUT => 3,
+                        PDO::ATTR_PERSISTENT => true,
+                    )
+                );
             }catch(PDOException $e){
                 $this->error = $e->getMessage();
                 $this->pdb = null;
@@ -84,7 +88,7 @@ abstract class CPdb {
         }
         try{
             ob_start();
-            $linkstring = $this->pdb->getAttribute(PDO::ATTR_SERVER_INFO);
+            $this->pdb->getAttribute(PDO::ATTR_SERVER_INFO);
             $linkstring = ob_get_clean();
         }catch(PDOException $e){
             $linkstring = $e->getMessage();
