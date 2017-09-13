@@ -12,18 +12,19 @@
 
 abstract class CPdb {
     
-    protected $pdb     = null;
-    protected $error   = null;
-    protected $errno   = null;
-    protected $warning = null;
-    protected $sqls    = array();
-    protected $preview = false;
+    protected $pdb      = null;
+    protected $sqls     = array();
+    protected $error    = null;
+    protected $errno    = null;
+    protected $warning  = null;
+    protected $preview  = false;
 
-    protected $dsn     = null;
-    protected $user    = 'root';
-    protected $pswd    = 'root';
-    protected $driver  = null;
-    protected $alias   = null; //用于调试
+    protected $dsn      = null;
+    protected $user     = 'root';
+    protected $pswd     = 'root';
+    protected $driver   = null;
+    protected $encoding = 'utf8';
+    protected $alias    = null; //用于调试
 
     function __construct($paraArr=array())
     {
@@ -53,12 +54,21 @@ abstract class CPdb {
             if(isset($paraArr['driver'])){
                 $this->driver = $paraArr['driver'];
             }
+            if(isset($paraArr['driver'])){
+                $this->driver = $paraArr['driver'];
+            }
+            if(isset($paraArr['encoding'])){
+                $this->encoding = $paraArr['encoding'];
+            }
             try {
                 $this->pdb = new PDO($this->dsn, $this->user, $this->pswd, array(
                         PDO::ATTR_TIMEOUT => 3,
                         PDO::ATTR_PERSISTENT => true,
                     )
                 );
+                if('mysql' == $this->driver){
+                    $this->execute('set names '.$this->encoding);
+                }
             }catch(PDOException $e){
                 $this->error = $e->getMessage();
                 $this->pdb = null;

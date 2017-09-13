@@ -18,8 +18,6 @@ class CMysql extends CPdb {
         //'mysql:dbname=mysql;host=127.0.0.1';
         $params['dsn'] = "mysql:dbname={$dbName};host={$host}";
         parent::__construct($params);
-        $this->encoding = isset($params['encoding'])?$params['encoding']:'utf8';
-        $this->execute('set names '.$this->encoding);//utf8mb4(mysql的utf8不是标准的utf8,只能存储1-3个字节)
     }
     public function getEncoding()
     {
