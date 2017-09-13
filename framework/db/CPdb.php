@@ -88,12 +88,12 @@ abstract class CPdb {
         }
         try{
             ob_start();
-            $this->pdb->getAttribute(PDO::ATTR_SERVER_INFO);
+            $Attributes = $this->pdb->getAttribute(PDO::ATTR_SERVER_INFO);
             $linkstring = ob_get_clean();
         }catch(PDOException $e){
             $linkstring = $e->getMessage();
         }
-        if(strpos($linkstring, 'server has gone away')){
+        if(false === $Attributes || strpos($linkstring, 'server has gone away')){
             return $this->reconnect();
         }
         return $this->pdb;
