@@ -378,12 +378,21 @@ abstract class CEle {
     *
     *
     */
-    public function removeArrayNull(&$dataArr)
+    public function removeArrayNull(&$array, $emptystring=false, $zero=false, $spval=null)
     {
-        if(!is_array($dataArr))return;
-        foreach($dataArr as $k=>$v){
-            if(is_null($v))unset($dataArr[$k]);
+        if(!is_array($array))return $array;
+        foreach ($array as $k=>&$vs){
+            self::removeArrayNull($vs, $emptystring, $zero, $spval);
+            if(is_null($vs)){
+                unset($array[$k]);
+            }else if(''===$vs){
+                if($emptystring)unset($array[$k]);
+            }else if(0===$vs){
+                if($zero)unset($array[$k]);
+            }else if($spval===$vs){
+                unset($array[$k]);
+            }
         }
-        return $dataArr;
+        return $array;
     }
 };
