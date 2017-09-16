@@ -322,8 +322,9 @@ abstract class CEle {
             !is_array($subArr)
         )return $rowArr;
         list($pk,$fk) = explode(':', $fields);
-        CTool::table2tree($subArr, $fk);
-        // $this->dump($rowArr);
+        // CTool::table2tree($subArr, $fk);
+        $subArr = CFun::groupBy($subArr, $fk);
+        // $this->dump($subArr);
         foreach($rowArr as &$rr){
             $rr[$subname] = isset($subArr[$rr[$pk]])?$subArr[$rr[$pk]]:array();
         }
@@ -394,5 +395,25 @@ abstract class CEle {
             }
         }
         return $array;
+    }
+    /*
+    * desc: insert a element to array by specied index
+    * @array  --- array      
+    * @index  --- int|string 
+    * @insert --- mixed      
+    */
+    function arrayInsert(&$array, $index, $insert, $after=true)
+    {
+        if(is_int($index)) {
+            array_splice($array, $index, 0, $insert);
+        }else {
+            $place = array_search($index, array_keys($array));
+            if($after) $place += 1;
+            $array = array_merge(
+                array_slice($array, 0, $place),
+                $insert,
+                array_slice($array, $place)
+            );
+        }
     }
 };

@@ -265,11 +265,11 @@ class CFun {
         $groupedArr = array();
 
         //dataArr分组后存放到临时数组中
-        foreach($dataArr as $row){
+        foreach($dataArr as $k=>$row){
             if(!isset($row[$field])) continue;
             $key = $row[$field];
             $keyArr[] = $key;
-            $groupedArr[$key][] = $row;
+            $groupedArr[$key][$k] = $row;
         }
         //end dataArr分组后存放到临时数组中
 

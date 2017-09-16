@@ -11,10 +11,11 @@ class CDao extends CEle{
 
     private $keyArr = array(
         'order'    => 0,
-        'having'   => 0,
         'group'    => 0,
         'limit'    => 0,
+        'alias'    => 0,
         'fields'   => 0,
+        'having'   => 0,
         'flat'     => 0,
         'keyas'    => 0,
         'prefix'   => 0,
@@ -274,11 +275,13 @@ class CDao extends CEle{
     *                   order     --- 排序
     *                   having    --- having过滤
     *                   fields    --- 字段
+    *                   alias     --- userid=id,memberid=buyerid
     *                   only_data --- bool(true:只查数据不要计算count,false:查询count),
     *                   join_.... --- array(
     *                       table1 => fk1:pk1|wh1;fk2:pk2|wh2;...,
     *                       table2 => fk:pk,(主表的外建和副表的主键序列)
     *                       table3 => fk:pk|flat=f1,f2...(扁平化的组装)
+    *                       table4 => fk:pk|defaults=comments=0,services=0
     *                   )(join查询)
     *               )
     *
@@ -288,7 +291,6 @@ class CDao extends CEle{
     */
     public function getMore($table, $whArr=array(), $exArr=array(), &$total=0)
     {
-        // $whArr = is_array($whArr)?$whArr:array();
         if(!is_array($exArr)) $exArr = array();
         if($exArr){
             $this->ftExtras($table, $exArr);
@@ -296,20 +298,13 @@ class CDao extends CEle{
         
         //数据库查询相关变量=========================
         $exArr['page']  = isset($exArr['page'])?intval($exArr['page']):1;
-        $exArr['page']  = $exArr['page']?$exArr['page']:1;
+        $exArr['page']  = max($exArr['page'], 1);
         $exArr['limit'] = isset($exArr['limit'])?intval($exArr['limit']):20;
         // $exArr['limit'] = $exArr['limit']?$exArr['limit']:20; //对于limit不能加此判断,因为0是有意义的
         if(isset($exArr['fields'])){
             $exArr['fields'] = $this->ftFields($table, $exArr['fields']);
         }
         //数据库查询相关变量======================end
-
-        //是业务逻辑变量=============================
-        $aggregated = isset($exArr['aggregated'])?$exArr['aggregated']:false;
-        $keyas      = isset($exArr['keyas'])?$exArr['keyas']:null;//作为key的字段
-        //是业务逻辑变量==========================end
-
-        $join = isset($exArr['join'])?$exArr['join']:null; //是否要join...
 
         $db = $this->getConnection();
         if(is_scalar($whArr)){
@@ -319,9 +314,25 @@ class CDao extends CEle{
         }
         $rowArr = $db->getAll($table, $whArr, $exArr, $total);
         if(!empty($rowArr)){
+            $aggregated = isset($exArr['aggregated'])?$exArr['aggregated']:false;
+            if(isset($exArr['alias'])){
+                parse_str($exArr['alias'], $aliasArr);
+                if(is_array($aliasArr)){
+                    foreach($aliasArr as $alias_filed=>$real_field){
+                        foreach($rowArr as &$r0002){
+                            if(!isset($r0002[$real_field]))break;
+                            $alias_value = $r0002[$real_field];
+                            $this->arrayInsert($r0002, $real_field, array(
+                                    $alias_filed => $alias_value
+                                )
+                            );
+                        }
+                    }
+                }
+            }
             if(!$aggregated){
-                if($join && is_array($join)){
-                    foreach($join as $_table => $_fkpks){
+                if(isset($exArr['join']) && is_array($exArr['join'])){
+                    foreach($exArr['join'] as $_table => $_fkpks){
                         if(!$_fkpks)continue;
                         $_alias = $_table = trim($_table); //默认别名
                         if($_spe = strpos($_table, ' ')){//空格(空格后的是别名)
@@ -336,35 +347,36 @@ class CDao extends CEle{
                             }
                         }
                         // var_dump($_table);
-                        $_fkpks = trim($_fkpks, ';');
+                        $_fkpks  = trim($_fkpks, ';');
                         $fkpkArr = explode(';', $_fkpks);
                         for($i=0,$max=count($fkpkArr); $i<$max; $i++){//一个表的多个字段join同一个表
                             $fkpk = $fkpkArr[$i];//fk,pk,ewh(附加条件)
                             $_ewh_arr = array(); //附加条件
                             $_eex_arr = array(); //附加参数
-                            if($pos = strpos($fkpk,'|')){
-                                $whstr = substr($fkpk,$pos+1); //条件
-                                $fkpk  = substr($fkpk,0,$pos);
-                                parse_str(str_replace('|','&',$whstr),$_ewh_arr);
-                                foreach($_ewh_arr as $_k=>$_v){
-                                    if(isset($this->keyArr[$_k])){
-                                        $_eex_arr[$_k] = $_v;
-                                        unset($_ewh_arr[$_k]);
+                            if(strpos($fkpk, '|')){
+                                $_tmp_arr = explode('|', $fkpk);
+                                $fkpk = array_shift($_tmp_arr);
+                                foreach($_tmp_arr as $_tmp_str){
+                                    $_k = strchr($_tmp_str, '=', true);
+                                    if(false===$_k || !isset($this->keyArr[$_k])){
+                                        parse_str($_tmp_str, $_tmp_wh);
+                                        $_ewh_arr = array_merge($_ewh_arr, $_tmp_wh);
+                                    }else{
+                                        $_eex_arr[$_k] = ltrim(strchr($_tmp_str,'='),'=');
                                     }
                                 }
                             }
                             list($kL, $kR) = explode(':', $fkpk);
-                            if($db){
+                            if(1){
                                 $_left_arr = $this->getArrayColumn($rowArr, $kL); //左表的值
                                 $_left_cnt = count($_left_arr); //个数
                                 $_wh_arr   = array_merge(array("$kR in"=>$_left_arr), $_ewh_arr);
                                 if($this->isUniqueKey($_table, $kR)){
                                     //一对一模式
                                     $_ex_arr = array_merge(array('limit'=>$_left_cnt,'only_data'=>true), $_eex_arr);
-                                    $fRows = $db->getAll($_table, $_wh_arr, $_ex_arr);
+                                    // $fRows = $db->getAll($_table, $_wh_arr, $_ex_arr);
+                                    $fRows = $this->getMore($_table, $_wh_arr, $_ex_arr);
                                     // echo $db->getSqlString(true);
-                                    // print_r($fRows);
-                                    // print_r($_eex_arr);
                                     $defaults = array();
                                     if(isset($_eex_arr['defaults'])){
                                         parse_str(str_replace(',','&',$_eex_arr['defaults']), $defaults);
@@ -381,18 +393,12 @@ class CDao extends CEle{
                                 }else{
                                     //一对多模式(树壮)
                                     $_ex_arr = array_merge(array('limit'=>1000*$_left_cnt,'only_data'=>true), $_eex_arr);
-                                    $fRows = $db->getAll($_table, $_wh_arr, $_ex_arr);
+                                    // $fRows = $db->getAll($_table, $_wh_arr, $_ex_arr);
+                                    $fRows = $this->getMore($_table, $_wh_arr, $_ex_arr);
                                     // echo $db->getSqlString(true);
                                     if($fRows){
                                         //因为这时的pk和fk相当于调换了位置,所以和上面的是相反的
                                         $rowArr = $this->joinToTrray($rowArr, $fRows, "$kL:$kR", $_alias);
-                                        if(isset($_ex_arr['keyas'])){
-                                            foreach($rowArr as &$r0001){
-                                                if(isset($r0001[$_alias])){
-                                                    $r0001[$_alias] = $this->fieldAsKey($r0001[$_alias], $_ex_arr['keyas']);
-                                                }
-                                            }
-                                        }
                                     }
                                 }
                             }
@@ -400,8 +406,8 @@ class CDao extends CEle{
                     }
                 }
             }
-            if($keyas){
-                $rowArr = $this->fieldAsKey($rowArr, $keyas);
+            if(isset($exArr['keyas'])){
+                $rowArr = $this->fieldAsKey($rowArr, $exArr['keyas']);
             }
         }else{
             if(false === $rowArr){
