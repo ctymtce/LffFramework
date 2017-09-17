@@ -284,13 +284,10 @@ abstract class CEle {
         )
     *
     */
-    public function joinToArray($rowArr, &$subArr, $fields, $subname='__sub', $overwrite=false)
+    public function joinToArray($rowArr, &$subArr, $fields, $subname='__sub', $overwrite=false, $defaults=array())
     {
-        if(empty($rowArr) || 
-            empty($subArr) || 
-            !is_array($rowArr) ||
-            !is_array($subArr)
-        )return $rowArr;
+        if(!is_array($rowArr) || (!is_array($subArr) && !is_array($defaults))) return $rowArr;
+        if(empty($rowArr) || (empty($subArr) && empty($defaults)))return $rowArr;
         // list($pk,$fk) = explode(':', $fields);
         list($kL,$kR) = explode(':', $fields);
         $_subArr = array();
@@ -304,7 +301,14 @@ abstract class CEle {
             if(!$overwrite){//如果存在不要覆盖
                 if(isset($rr[$subname]) && is_array($rr[$subname]) && count($rr[$subname])>0) continue;
             }
-            $rr[$subname] = isset($_subArr[$rr[$kL]])?$_subArr[$rr[$kL]]:array();
+            // $rr[$subname] = isset($_subArr[$rr[$kL]])?$_subArr[$rr[$kL]]:array();
+            if(isset($_subArr[$rr[$kL]])){
+                $rr[$subname] = $_subArr[$rr[$kL]];
+            }elseif(!empty($defaults)){
+                $rr[$subname] = $defaults;
+            }else{
+                $rr[$subname] = array();
+            }
         }
         return $rowArr;
     }

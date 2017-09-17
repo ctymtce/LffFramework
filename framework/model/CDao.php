@@ -10,14 +10,15 @@
 class CDao extends CEle{
 
     private $keyArr = array(
+        'join'     => 0,
+        'flat'     => 0,
         'order'    => 0,
         'group'    => 0,
         'limit'    => 0,
+        'keyas'    => 0,
         'alias'    => 0,
         'fields'   => 0,
         'having'   => 0,
-        'flat'     => 0,
-        'keyas'    => 0,
         'prefix'   => 0,
         'defaults' => 0,
     );
@@ -27,14 +28,14 @@ class CDao extends CEle{
         'smallint',
         'mediumint',
         'bigint',
-        'bit',
         'boolean',
-        'serial'
+        'serial',
+        'bit',
     );
     private $floatArr = array(
-        'decimal',
         'float',
         'double',
+        'decimal',
         'real'
     );
     private $pdbArr = array();
@@ -45,7 +46,7 @@ class CDao extends CEle{
 
     function __construct($dsArr)
     {
-        if(!$dsArr){
+        if(empty($dsArr)){
             $this->Exception('Error Database Configures');
         }
         $this->dsArr = &$dsArr;
@@ -379,7 +380,7 @@ class CDao extends CEle{
                                     // echo $db->getSqlString(true);
                                     $defaults = array();
                                     if(isset($_eex_arr['defaults'])){
-                                        parse_str(str_replace(',','&',$_eex_arr['defaults']), $defaults);
+                                        parse_str($_eex_arr['defaults'], $defaults);
                                     }
                                     if($fRows || $defaults){
                                         // $_subkey = $i>0?($_table.$i):$_table;
