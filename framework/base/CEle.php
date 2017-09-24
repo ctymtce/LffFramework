@@ -12,7 +12,7 @@ abstract class CEle {
     function __call($method, $args)
     {
         $caller = $this->getCaller();
-        if(!$caller) $caller = Lff::App();
+        if(!is_object($caller)) $caller = Lff::App();
         if(method_exists($caller, $method)) {
             switch(count($args))
             {   //to compatible old php versions and imporve performance
@@ -92,14 +92,14 @@ abstract class CEle {
     {
         if(ob_get_length() > 0) ob_clean();
     }
-    public function CallStacks($spliter="\n")
+    public function CallStacks($error='', $spliter="\n")
     {
         $trace = explode("\n", (new Exception())->getTraceAsString());
         $trace = array_reverse($trace);
         // array_shift($trace); // remove {main}
         // array_pop($trace);   // remove 当前方法
         $length = count($trace);
-        $result = array();
+        $result = array($error);
         
         for($i=0; $i<$length; $i++){
             $result[] = ($i+1).')'.substr($trace[$i], strpos($trace[$i], ' ')); // replace '#someNum' with '$i)', set the right ordering
@@ -406,7 +406,7 @@ abstract class CEle {
     * @index  --- int|string 
     * @insert --- mixed      
     */
-    function arrayInsert(&$array, $index, $insert, $after=true)
+    public function arrayInsert(&$array, $index, $insert, $after=true)
     {
         if(is_int($index)) {
             array_splice($array, $index, 0, $insert);
@@ -419,5 +419,36 @@ abstract class CEle {
                 array_slice($array, $place)
             );
         }
+    }
+    public function renameArrayKey(&$array, $fromkey, $tokey)
+    {
+        if(!isset($array[$fromkey])) return false;
+        $fromkey = (string)$fromkey;
+        $this->arrayInsert($array, $fromkey, array(
+                $tokey=>$array[$fromkey]
+            )
+        );
+        unset($array[$fromkey]);
+        return true;
+    }
+    /*
+    * desc: flatize a array
+    *
+    *@array --- arr
+    *@excludekey --- bool it decides wheather override the same keys 
+    *
+    */
+    public function flattingArray($array, $excludekey=true)
+    {
+        foreach($array as $k=>$r0001){
+            if(is_array($r0001)){
+                unset($array[$k]);
+                if($excludekey){
+                    $r0001 = array_diff_key($r0001, $array);
+                }
+                $array = array_merge($array, self::flattingArray($r0001));
+            }
+        }
+        return $array;
     }
 };
