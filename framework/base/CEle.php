@@ -12,7 +12,7 @@ abstract class CEle {
     function __call($method, $args)
     {
         $caller = $this->getCaller();
-        if(!is_object($caller)) $caller = Lff::App();
+        if(false === $caller) $caller = Lff::App();
         if(method_exists($caller, $method)) {
             switch(count($args))
             {   //to compatible old php versions and imporve performance
@@ -32,6 +32,7 @@ abstract class CEle {
     /*
     * desc: 获取调用者的祖先
     *
+    *return object or false if failure
     */
     public function getCaller($property='cgimode')
     {
