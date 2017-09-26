@@ -251,10 +251,10 @@ abstract class CPdb {
     {
         if(!$whArr)return null;
         if(is_scalar($whArr))return $whArr;
-        $loops = 0;   //循环的次数
-        $where = '';  //生成的最终where字符串
-        $space = ' '; //空格
-        $depth = $depth + 1;
+        // $loops = 0;   //循环的次数
+        $where  = '';  //生成的最终where字符串
+        $space  = ' '; //空格
+        $depth += 1;
         //andorfield可能是and or 或字段名
         //whorvalue可能是下一组条件或字段对应的值
         foreach($whArr as $andorfield => $whorvalue){
@@ -271,10 +271,10 @@ abstract class CPdb {
                         $bL = '(';   $bR = ')';
                     }
                     //注意:如果depth>1那么操作符(and,or)要使用上一维的操作符
-                    $where .= (0==$loops?'':$space.trim($depth>1?$andordft:$andordft_cur)) .$space. $bL .$subwh. $bR;
+                    $where .= ($where?$space.trim($depth>1?$andordft:$andordft_cur):'') .$space. $bL .$subwh. $bR;
                     $where  = trim($where);
                 }else{
-                    $where .= ($loops>0?$space.$andordft:null).$space.$whorvalue;
+                    $where .= ($where?$space.$andordft:null).$space.$whorvalue;
                 }
             }else{
                 //这里的andorfield为字段名
@@ -318,7 +318,7 @@ abstract class CPdb {
                         break;
                     case 'in':
                     case 'ni':
-                        if(!($value))break;
+                        if(empty($value))break;
                         if(!is_array($value)){
                             $vallist = $value;
                         }else{
@@ -352,10 +352,10 @@ abstract class CPdb {
                         }
                 }
                 if($whone){
-                    $where .= ($loops>0?($space.$andordft.$space):null). $whone;
+                    $where .= ($where?($space.$andordft.$space):null).$whone;
                 }
             }
-            $loops++;
+            // $loops++;
         }
         return $where;
     }
