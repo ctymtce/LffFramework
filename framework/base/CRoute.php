@@ -714,8 +714,15 @@ abstract class CRoute extends CEle {
         $v = $this->get($key, $default, $strict, $filter);
         return is_null($v)?null:floatval($v);
     }
-    function gets($keys, $filter=null, $default=null)
+    function gets($keys=null, $filter=null, $default=null)
     {
+        if(null === $keys){
+            if($this->request){
+                return $this->request->get;
+            }else{
+                return $_GET;
+            }
+        }
         $keys = trim($keys, ',');
         $keyArr  = explode(',', $keys);
         $dataArr = array();
@@ -754,12 +761,15 @@ abstract class CRoute extends CEle {
     *keys --- str eg:'*,f1,f2,^f3'
     *
     */
-    function posts($keys, $filter=null, $strict=false, $default=null)
+    function posts($keys=null, $filter=null, $strict=false, $default=null)
     {
         if($this->request){
             $iPOST = &$this->request->post;
         }else{
             $iPOST = &$_POST;
+        }
+        if(null === $keys){
+            return $iPOST;
         }
         $keys    = trim($keys, ',');
         $keyArr  = explode(',', $keys);
