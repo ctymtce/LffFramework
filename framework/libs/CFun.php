@@ -254,7 +254,7 @@ class CFun {
     *sortby  --- int [11:key升序,12:key降序,21:val升序,22:val降序]
     *return void
     */
-    static function groupBy($dataArr, $fields, $sortby=null)
+    static function groupBy($dataArr, $fields, $keepkey=false, $sortby=null)
     {
         if(!is_array($dataArr)) return null;
         $fArr   = explode(',', $fields);
@@ -269,7 +269,11 @@ class CFun {
             if(!isset($row[$field])) continue;
             $key = $row[$field];
             $keyArr[] = $key;
-            $groupedArr[$key][$k] = $row;
+            if($keepkey){
+                $groupedArr[$key][$k] = $row;
+            }else{
+                $groupedArr[$key][] = $row;
+            }
         }
         //end dataArr分组后存放到临时数组中
 
