@@ -22,6 +22,7 @@ abstract class CRoute extends CEle {
     *                |------------route-------------|
     *                
     */
+    protected $urlmode    = 2; //url style[1-compility, 2-REST]
     protected $route      = null; /*
                                     route = directory + controller + action
                                                       or
@@ -33,12 +34,11 @@ abstract class CRoute extends CEle {
     protected $directory  = null;
     protected $controller = null;
     protected $action     = null;
+    protected $restArr    = array();
+    protected $restful    = array(); //用于暂存
+
     /*************end URL中path的命名规范***************/
 
-    protected $restArr   = array();
-    protected $restful   = array(); //用于暂存
-
-    protected $urlmode   = 2; //url style[1-compility, 2-REST]
 
     /*****************************环境变量参数规划************************/
     public $primaryLoc   = '';
@@ -80,7 +80,8 @@ abstract class CRoute extends CEle {
     private function InitConfigs(&$configs)
     {
         if(!isset($configs['boot'])) {
-            exit('The base location does not seted');
+            // exit('The base location does not seted');
+            return $this->Exception('The base location does not seted');
         }
         $this->ui           = isset($configs['ui'])?$configs['ui']:'default'; //ui name
         $this->sub          = isset($configs['sub'])?$configs['sub']:'primary';
@@ -1040,5 +1041,17 @@ abstract class CRoute extends CEle {
                 isset($_SERVER['REFERER'])?$_SERVER['REFERER']:null
             );
         }
+    }
+    public function Clean()
+    {
+        $this->path       = null;
+        $this->route      = null;
+        $this->router     = null;
+        $this->appRoute   = null;
+        $this->directory  = null;
+        $this->controller = null;
+        $this->action     = null;
+        $this->restArr    = array();
+        $this->restful    = array();
     }
 };
