@@ -659,9 +659,9 @@ abstract class CRoute extends CEle {
     *       不含app是原始路由信息(http请求级的);
     *
     */
-    public function getAppRoute($prex='/')
+    public function getAppRoute($prex='')
     {
-        return $prex . $this->appRoute;
+        return $prex . ltrim($this->appRoute,'/');
     }
     public function getAppPath()
     {
