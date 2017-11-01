@@ -121,7 +121,8 @@ abstract class CRoute extends CEle {
 
     private function _get_controller_location($sub=null)
     {
-        return $this->boot .'/'. ($sub?$sub:$this->sub) . '/controller';
+        if(null == $sub) $sub = $this->sub;
+        return $this->boot .'/'.$sub.'/controller';
     }
     /*
     * desc: 加载公共自定义配置文件
@@ -251,10 +252,8 @@ abstract class CRoute extends CEle {
                     return $directory;
                 }
             }
-        }else{
-            $sub = $this->sub;
-            return 'primary'==$sub?'site':$sub;
         }
+        return 'primary'==$this->sub?'site':$this->sub;
     }
     /**
     * author: cty@20120326
@@ -397,16 +396,17 @@ abstract class CRoute extends CEle {
     /*
     * desc: 获取路由
     *
-    *@route --- str cgi初始化时不要将route传进来(cli时可以传)
+    *@route   --- str cgi初始化时不要将route传进来(cli时可以传)
+    *@lunched --- bool 是否请求过了
     *
     *return     http://www.test.me/search/20/b/3?a=t
     *       --->/search/20/b/3
     */
-    function getRoute($route=null)
+    function getRoute($route=null, $lunched=true)
     {
         //获取url中的路由==============================
         if(!$route){
-            if($this->route){
+            if(true===$lunched && $this->route){
                 return $this->route; //url中的路由可只获取一次即可
             }
             $URI   = $this->getRequestUri();
@@ -440,11 +440,60 @@ abstract class CRoute extends CEle {
         //获取url中的路由===========================end
         return $route;
     }
+    function URI2File($route, $sub, &$FOLDERs=null, &$controller=null, &$action=null)
+    {
+        $ctrlLoc = $this->_get_controller_location($sub);//controller root dir
+        $action  = 'entry'; //default action
+        if(!$route){
+            $controller  = $this->_get_default_controller_name(); //实际为最一个目录名
+            return $ctrlLoc. '/'. 'K'. ucfirst($controller).'.php';
+        }
+        // echo "route=$route\n";
+
+        $controller_file = null;
+        $pieceArr = explode('/', $route); //把路由中的路径分成一块一块的
+        foreach($pieceArr as $k=>$piece) {
+            if(is_dir($ctrlLoc. '/'. $FOLDERs. $piece)){
+                unset($pieceArr[$k]);
+                $FOLDERs .= $piece.'/';
+                if(!isset($pieceArr[$k+1])){ //这意味着路由只显示地设置到目录名(controller和action没设置,也没有rest参数)
+                    //如果是一个目录,它下面的默认控制器为该目录名
+                    $controller = $piece;
+                    $controller_file = $ctrlLoc. '/'. $FOLDERs. 'K'. ucfirst($controller).'.php';
+                    break;
+                }
+                continue; //继续寻找目录
+            }
+            $controller_file = $ctrlLoc. '/'. $FOLDERs. 'K'. ucfirst($piece).'.php';
+  
+            if(is_file($controller_file)){
+                $controller = $piece;
+                if(isset($pieceArr[$k+1])) $action = $pieceArr[$k+1];
+                unset($pieceArr[$k], $pieceArr[$k+1]);
+                break;
+            }else{
+                //如果最后一个为数字
+                if(strlen(floatval($piece)) == strlen($piece)){
+                    break;
+                }else{
+                    $controller  = $this->_get_default_controller_name($FOLDERs);
+                    $controller_file = $ctrlLoc. '/'. $FOLDERs. 'K'. ucfirst($controller).'.php';
+                    if(is_file($controller_file)){
+                        $action = $piece;
+                        var_dump($piece);
+                        break;
+                    }
+                }
+            }
+            break; //第一个都不是目录就跳出
+        }
+        return $controller_file;
+    }
     /*
     * desc: 获取并整理路由
     *
-    *@route       --- str  可显示地设置一个路由(eg.'user/profile')
-    *@manulrouted --- bool 标识是否人为显示地运行一个路由(也就是@route显手工传的参数)
+    *@route  --- str  可显示地设置一个路由(eg.'user/profile')
+    *@manual --- bool 标识是否人为显示地运行一个路由(也就是@route显手工传的参数)
     * eg.:
     *       controller
     *       │  KClub.php
@@ -456,69 +505,59 @@ abstract class CRoute extends CEle {
     *                                    | --- KConsultion->actionAsk(如果actionAsk存在)
             /consultion/ask            --                 ->actionEntry(如果actionAsk不存在,ask作为参数)
     */
-    function runRoute($route=null, $parameters=null, $manulrouted=false, $sub=null)
+    public function runRoute($route, $parameters=null, $manual=false, $sub=null)
     {
-        $route = trim($this->getRoute($route), '/');
-        $ctrlLoc = $this->_get_controller_location($sub);
-        if(!isset($route[0])) {//route is a string
-            return $this->runDCA($ctrlLoc,null,null,null,null,$parameters);
-        }
-        $pieceArr = explode('/', $route); //把路由中的路径分成一块一块的
-        $FOLDERs  = null;
-        foreach ($pieceArr as $k=>$piece) {
-            if(is_dir($ctrlLoc. '/'. $FOLDERs. $piece)){
-                unset($pieceArr[$k]);
-                $this->directory = $FOLDERs .= $piece.'/';
-                if(!isset($pieceArr[$k+1])){ //这意味着路由只显示地设置到目录名(controller和action没设置,也没有rest参数)
-                    //如果是一个目录,它下面的默认控制器为该目录名
-                    return $this->runDCA($ctrlLoc, $route, $FOLDERs, null, null, $parameters);
-                }
-                continue; //继续寻找目录
-            }
-            
-            // $file = str_replace($piece.'/', replace, subject)
-            $controllerClass = 'K'. ucfirst($piece);
-            $controller_file = $ctrlLoc. '/'. $FOLDERs. 'K'. ucfirst($piece).'.php';
-  
-            if(is_file($controller_file)){
-                $controller = $piece;
-                $action     = isset($pieceArr[$k+1])?$pieceArr[$k+1]:null;
-                unset($pieceArr[$k], $pieceArr[$k+1]);
-                // $this->restArr[]   = implode('/', $pieceArr);
-                return $this->runDCA($ctrlLoc, $route, $FOLDERs, $controller, $action, $parameters);
-            }else{
-                //如果最后一个为数字
-                if(strlen(floatval($piece)) == strlen($piece)){
-                    // $this->restArr[]   = implode('/', $pieceArr);
-                    return $this->runDCA($ctrlLoc, $route, $FOLDERs, null, null, $parameters);
-                }else{
-                    $def_controller  = $this->_get_default_controller_name($FOLDERs);
-                    $controller_file = $ctrlLoc. '/'. $FOLDERs. 'K'. ucfirst($def_controller).'.php';
-                    if(is_file($controller_file)){
-                        $action = $piece;
-                        // $this->restArr[]   = implode('/', $pieceArr);
-                        return $this->runDCA($ctrlLoc, $route, $FOLDERs, $def_controller, $action, $parameters);
-                    }
-                }
-            }
-            break; //第一个都不是目录就跳出 print_r
-        }
-        //至此说明在路由中没找到controller和action========
-        if($manulrouted){
-            $this->fatalError(); //如果人为显示地传的路由则不加载默认值
-        }
-        $def_controller  = $this->_get_default_controller_name($FOLDERs);
-        return $this->runDCA($ctrlLoc, $route, $FOLDERs, $def_controller, null, $parameters);
+        if(!isset($this->fc_queuing))$this->fc_queuing = array();
+        if(!isset($this->fc_mapping))$this->fc_mapping = array();
 
-        //至此说明在路由中没找到controller和action=====end
-        // $this->fatalError(); //没有找到相应action
+        if(null === $sub) $sub = $this->sub;
+        $rckey = $sub.'.'.$route;
+
+        if(isset($this->fc_queuing[$rckey])){
+            $ctrlFile   = $this->fc_queuing[$rckey]['file'];
+            $FOLDERs    = $this->fc_queuing[$rckey]['directory'];
+            $controller = $this->fc_queuing[$rckey]['controller'];
+            $action     = $this->fc_queuing[$rckey]['action'];
+        }else{
+            $ctrlFile = $this->URI2File($route, $sub, $FOLDERs, $controller, $action);
+            if(is_file($ctrlFile)){
+                if(isset($this->fc_mapping[$ctrlFile])){//ctrlFile已经被缓存过,则删除之前的
+                    //此举是为了防止不同的URI产生相同的路由,以保证fc_queuing不会无限澎涨
+                    unset($this->fc_queuing[$this->fc_mapping[$ctrlFile]]);
+                }
+                $this->fc_mapping[$ctrlFile] = $rckey;
+                $this->fc_queuing[$rckey] = array(
+                    'file'       => $ctrlFile,
+                    'directory'  => $FOLDERs,
+                    'controller' => $controller,
+                    'action'     => $action,
+                );
+            }else{
+                return $this->Exception("The route {$route} does not exists");
+            }
+        }
+        //整理覆盖参数============================
+        $this->action     = $action;
+        $this->controller = $controller; //要先赋值,不然在下面的iController的构造函数里取不到controller值
+        $this->router     = $controller. '/'. $action;
+        $this->path       = $FOLDERs . $controller;    //路径
+        $this->appRoute   = $FOLDERs . $this->router;  //实际路由
+        $this->_append_rest_params($route, $FOLDERs, $controller, $action);
+        //整理覆盖参数=========================end
+        // echo ("结果****************\n");
+        // print_r($this->fc_queuing);
+        // echo ("ctrlFile = $ctrlFile\n");
+        // echo ("FOLDERs = $FOLDERs\n");
+        // echo ("controller = $controller\n");
+        // echo ("action = $action\n");
+        return $this->runDCA($ctrlFile,$route, $FOLDERs,$controller,$action, $parameters);
     }
-    function runRouteEx($route=null, $sub=null)
+    public function runRouteEx($route=null, $sub=null)
     {
         $this->runRoute($route, null, true, $sub);
     }
 
-    function runRouteApi($route=null, $parameters=null)
+    public function runRouteApi($route=null, $parameters=null)
     {
         $this->runRoute($route, $parameters, true, 'api');
     }
@@ -528,43 +567,20 @@ abstract class CRoute extends CEle {
     *@controller --- str 默认控制器(如果没指定则为dirs的最后一个目录名)
     *@action     --- str 默认方法(如果没指定则为entry)
     */
-    public function runDCA($ctrlLoc, $route=null, $dirs=null, $controller=null, $action=null, $parameters=null)
+    public function runDCA($ctrlFile, $route=null, $dirs=null, $controller=null, $action=null, $parameters=null)
     {
-        if(empty($controller)){
-            $controller  = $this->_get_default_controller_name($dirs); //实际为最一个目录名
-        }
-        if(empty($action)){
-            $action      = 'entry';
-        }
         $controllerClass = 'K'. ucfirst($controller);
-        $controller_file = $ctrlLoc. '/'. $dirs. 'K'. ucfirst($controller).'.php';
 
-        if(is_file($controller_file)){
-            // require $controller_file;
-            $clazz = $this->requireOnce($controller_file);
-            if(strpos($clazz, '\\')){
-                $controllerClass = $clazz;
-            }
-            if(class_exists($controllerClass,false)){
-                $realAction  = 'action'.ucfirst($action);
-                if(!method_exists($controllerClass, $realAction)){
-                    $action       = 'entry';
-                    $realAction   = 'action'.ucfirst($action);
-                }
-                $this->action     = $action;
-                $this->controller = $controller; //要先赋值,不然在下面的iController的构造函数里取不到controller值
-                $this->router     = $controller. '/'. $action;
-                $this->path       = $dirs . $controller;    //路径
-                $this->appRoute   = $dirs . $this->router;  //实际路由
-                
-                $iController = new $controllerClass;
-                $this->_append_rest_params($route, $dirs, $controller, $action);
-                $iController->$realAction($parameters); //执行action方法
-                return true;
-            }
+        $clazz = $this->requireOnce($ctrlFile);
+        if(false === $clazz) return false;
+        if(strpos($clazz, '\\')){
+            $controllerClass = $clazz;
         }
-        $this->Exception('The route:'.$route.' does not exists');
-        return false;
+        if(class_exists($controllerClass, false)){
+            $realAction  = 'action'.ucfirst($action);
+            $iController = new $controllerClass;
+            return $iController->$realAction($parameters); //执行action方法
+        }
     }
     private function _append_rest_params($route,$dirs,$controler,$action)
     {
@@ -1040,6 +1056,12 @@ abstract class CRoute extends CEle {
                 $_SERVER['HTTP_REFERER']:(
                 isset($_SERVER['REFERER'])?$_SERVER['REFERER']:null
             );
+        }
+    }
+    public function Exception($message, $prefix='<pre>', $suffix='</pre>')
+    {
+        if($this->getConfig('debug')){
+            return parent::Exception($message, $prefix, $suffix);
         }
     }
     public function Clean()

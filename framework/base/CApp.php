@@ -64,14 +64,13 @@ class CApp extends CRoute {
     }
     private function appLanuch($route=null, $parameters=null)
     {
-        $route = $this->getRoute($route);
+        $route = $this->getRoute($route, false);
         if(isset($this->routeAlias[$route]) && $this->routeAlias[$route]){
             $route = $this->routeAlias[$route];
         }
         if($ROUTE_PREFIX = $this->getConfig('ROUTE_PREFIX')){
             $route = '/'.$ROUTE_PREFIX.'/'.ltrim($route,'/');
         }
-        // file_put_contents('/home/app/sites/game5v5test/sess/r.log', $route."\n", FILE_APPEND);
         return $this->runRoute($route, $parameters);
     }
     public function getTimeZone()
