@@ -480,7 +480,6 @@ abstract class CRoute extends CEle {
                     $controller_file = $ctrlLoc. '/'. $FOLDERs. 'K'. ucfirst($controller).'.php';
                     if(is_file($controller_file)){
                         $action = $piece;
-                        var_dump($piece);
                         break;
                     }
                 }
