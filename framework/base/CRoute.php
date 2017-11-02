@@ -952,18 +952,6 @@ abstract class CRoute extends CEle {
         }
         return $newurl.$anchor;
     }
-    function renderFile($file, $paraArr=array())
-    {
-        if(!is_file($file)) return '';
-        ob_clean();
-        ob_start();
-        ob_implicit_flush(false); //don't flush
-        if(is_array($paraArr) && count($paraArr)>0) {
-            extract($paraArr, EXTR_OVERWRITE);
-        }
-        require($file);
-        return ob_get_clean();
-    }
     /*
     *desc: get client ip
     *

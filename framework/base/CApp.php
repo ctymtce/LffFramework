@@ -156,7 +156,6 @@ class CApp extends CRoute {
             return $this->Arr726128772794766[$id];
         }
         $modelId = trim($modelId, '/');
-        // $modelLoc  = Lff::app()->modelLoc;
         
         if($subApp){
             $modelLoc  = $this->boot . '/'.$subApp .'/model';
