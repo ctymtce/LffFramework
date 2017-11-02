@@ -11,15 +11,9 @@ abstract class CCtrl extends CEle {
     protected $layout  = 'layout';
     protected $isClean = true;
     protected $isExit  = true;
-    protected $route   = null; //route of current request
-    protected $cfile   = null; //controller file path
     protected $vfile   = null; //view file path
     protected $smarty  = null;
 
-    public function setCfile($cfile)
-    {
-        $this->cfile = $cfile;
-    }
     public function setVfile($vfile)
     {
         $this->vfile = $vfile;
