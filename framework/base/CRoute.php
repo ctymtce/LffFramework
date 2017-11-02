@@ -41,17 +41,17 @@ abstract class CRoute extends CEle {
 
 
     /*****************************环境变量参数规划************************/
-    public $primaryLoc   = '';
 
     public $boot         = ''; //项目根目录(../../myproject)
     public $home         = ''; //当前根URL(http://www.demo.com)
     public $sub          = ''; //当前子项目名称(二级域名名称,如admin)
     public $ui           = ''; //当前子项目的ui(如:fluid)
 
-    public $SubLoc       = ''; //当前sub目录
+    public $PrimaryLoc   = '';
+    public $ModelLoc     = ''; //当前sub下模型目录
     public $ViewLoc      = ''; //当前sub下视图目录
     public $CtrlLoc      = ''; //当前sub下控制器目录
-    public $ModelLoc     = ''; //当前sub下模型目录
+    public $SubLoc       = ''; //当前sub目录
     public $DaoLoc       = ''; //dao目录
     public $UiLoc        = '';
 
@@ -85,24 +85,25 @@ abstract class CRoute extends CEle {
         }
         $this->ui           = isset($configs['ui'])?$configs['ui']:'default'; //ui name
         $this->sub          = isset($configs['sub'])?$configs['sub']:'primary';
+        $this->home         = isset($configs['home'])?$configs['home']:'/';
         $this->urlmode      = isset($configs['urlmode'])?$configs['urlmode']:2;
         
         $this->boot         = rtrim($configs['boot'], '/');
 
-        $this->AssetsLoc    = $this->boot.'/assets';
         $this->SubLoc       = $this->boot.'/'.$this->sub;
+        $this->AssetsLoc    = $this->boot.'/assets';
         
-        $this->daoLoc       = $this->boot.'/dao';
-        $this->primaryLoc   = $this->boot.'/primary'; //item = project
-        $this->ctrlLoc      = $this->_get_controller_location($this->sub);//$this->SubLoc.'/controller';
-        $this->viewLoc      = $this->SubLoc.'/view';
-        $this->modelLoc     = $this->SubLoc.'/model';
+        $this->DaoLoc       = $this->boot.'/dao';
+        $this->CtrlLoc      = $this->_get_controller_location($this->sub);//$this->SubLoc.'/controller';
+        $this->ViewLoc      = $this->SubLoc.'/view';
+        $this->ModelLoc     = $this->SubLoc.'/model';
 
         $this->TPL_LOC      = $this->getConfig('smarty',$this->boot).'/smarty';
         
         $this->AssetsUrl    = '/assets'; //不用绝对路径是为了便于使用不同的域名
 
         $this->SetUI($this->ui);
+        $this->PrimaryLoc   = $this->boot.'/primary'; //item = project
     }
     public function SetUI($ui='default')
     {
@@ -958,10 +959,9 @@ abstract class CRoute extends CEle {
         ob_start();
         ob_implicit_flush(false); //don't flush
         if(is_array($paraArr) && count($paraArr)>0) {
-            extract($paraArr, EXTR_PREFIX_SAME, 'rend');
+            extract($paraArr, EXTR_OVERWRITE);
         }
-        // require($file);
-        $this->requireOnce($file);
+        require($file);
         return ob_get_clean();
     }
     /*

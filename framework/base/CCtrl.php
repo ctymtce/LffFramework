@@ -25,95 +25,39 @@ abstract class CCtrl extends CEle {
         $this->vfile = $vfile;
     }
     
-    public function render($viewId=null, $dataArr=array())
+    public function render($vfile=null, $dataArr=array())
     {
-        if(null === $viewId){
-            $vfile = $this->vfile;
-        }else{
-            $vfile = $viewId;
-            if(!is_file($viewId)) {
-                // $this->httpError(404, 'The view file is not exists!');
-                $vfile = dirname($this->vfile).'/'. $viewId . '.php';
-            }
-        }
+        $App = Lff::$App;
+        if(!is_array($dataArr)) $dataArr = array();
+        $dataArr = array_merge(array(
+                'HOME'       => $App->home,
+                'ROOT'       => $App->boot,
+                'BOOT'       => $App->boot,
+                'ASSETS_LOC' => $App->AssetsLoc,
+                'ASSETS_URL' => $App->AssetsUrl,
+                'STATIC_LOC' => $App->AssetsLoc.'/static',
+                'STATIC_URL' => $App->AssetsUrl.'/static',
+                'UPLOAD_LOC' => $App->AssetsLoc.'/static/upload',
+                'UPLOAD_URL' => $App->AssetsUrl.'/static/upload',
+                'UI_URL'     => $App->UiUrl,
+                'UI_LOC'     => $App->UiLoc,
+            ), $dataArr
+        );
+
+        if(null === $vfile)$vfile = $this->vfile;
+        $vfile = $App->ViewLoc.'/'. $this->getController().'/'.$vfile . '.php';
         // echo $this->vfile;
+        // print_r($App);
         // exit($vfile);
         if(!is_file($vfile)) {
-            $this->httpError(404, 'The view file does not exists!');
+            return $this->httpError(404, 'The view file does not exists!');
         }
         //1, get view file contents
         $viewContent = $this->renderFile($vfile, $dataArr);
         //2, get layout file contents
-        $layFile = Lff::$App->layoutLoc . '/'. $this->layout . '.php';
-        $layContent  = $this->renderFile($layFile, array('content'=>$viewContent));
-        //3, output contents
-        // ob_clean();
-        // echo 'fffffffffffffffff';
-        list($jscript, $jsfiles) = $this->getJS();
-        // var_dump($jscript, $jsfiles);
-        // print_r($jscript);
-        if(strlen($jscript) > 0){
-            $layContent = str_replace('</head>', $jscript.'</head>', $layContent);
-        }
-        if(strlen($jsfiles) > 0){
-            $layContent = str_replace('</body>', $jsfiles.'</body>', $layContent);
-        }
-        echo $layContent;
-    }
-    function renderView($viewId, $paraArr=array(), $return=false)
-    {
-        // ob_clean();
-        // ob_start();
-        $viewFile = $this->getViewFile($viewId);
-        $content = $this->renderFile($viewFile, $paraArr);
-        if(!$return) exit($content);
-        return $content;
-    }
-    function renderLayout($layout, $paraArr=array(), $return=true)
-    {
-        $layFile = $this->getLayFile($layout);
-        $content = $this->renderFile($layFile, $paraArr);
-        if(!$return) echo $content;
-        return $content;
-    }
-    /**
-    * author: cty@20120326
-    *@viewId --- string(dir1/index)
-    *return: /../../dir1/index.php(absolute path) 
-    */
-    function getViewFile($viewId)
-    {
-        if(is_file($viewId)) return $viewId;
-        $viewLoc  = Lff::app()->viewLoc;
-        $viewId   = trim($viewId, '/');
-        $viewFile = $viewLoc.'/'.$viewId.'.php';
-        return $viewLoc;
-    }
-    function getLayFile()
-    {
-        $layLoc  = Lff::app()->layLoc;
-        $layFile = $layLoc.'/'.$this->layout . '.php';
-        return $layFile;
-    }
-    /**
-    * author: cty@20120331
-    *   func: get js from jbuffArr
-    */
-    function getJS()
-    {
-        $jbuffArr = Lff::$App->jbuffArr;
-        $jscript = $jsfiles = '';
-        foreach($jbuffArr as $key => $js) {
-            if(is_string($key)) {
-                $jsfiles .= '<script type="text/javascript" src="'.$js.'" ></script>'."\n";
-            }else {
-                $jscript .= $js."\n";
-            }
-        }
-        if(strlen($jscript) > 0) {
-            $jscript = "<script type='text/javascript' >\n".'$(document).ready(function(){'."\n".$jscript."\n".'});'."\n</script>\n";
-        }
-        return array($jscript, $jsfiles);
+        $layFile = $App->ViewLoc . '/layout/'. $this->layout . '.php';
+        $dataArr['content'] = $viewContent;
+        echo $this->renderFile($layFile, $dataArr);
     }
     /*********************************smarty******************************/
     public function LoadSmarty()
