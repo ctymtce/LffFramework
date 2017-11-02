@@ -579,13 +579,18 @@ abstract class CRoute extends CEle {
         if(class_exists($controllerClass, false)){
             $realAction  = 'action'.ucfirst($action);
             $iController = new $controllerClass;
+            if(!method_exists($iController, $realAction)){
+                $realAction = 'actionEntry';
+            }
             return $iController->$realAction($parameters); //执行action方法
         }
     }
     private function _append_rest_params($route,$dirs,$controler,$action)
     {
         // $dirs = str_replace('\\', '/', trim($dirs, '/'));
-        $_s   = trim($route, '/');
+        // echo "$route,$dirs,$controler,$action \n";
+        $this->restful = array(); //清空
+        $_s = trim($route);
         if($dirs && 0===strpos($_s, $dirs)){
             // $_s = trim(preg_replace("/^$dirs/", '', $_s), '/');
             $_s = trim(substr($_s, strlen($dirs)), '/');
@@ -599,6 +604,7 @@ abstract class CRoute extends CEle {
             $_s = trim(substr($_s, strlen($action)), '/');
         }
         // $_s = trim($_s, '/');
+
         if($_s){
             $this->restful[] = explode('/', $_s);
         }
@@ -839,7 +845,7 @@ abstract class CRoute extends CEle {
     */
     public function para($key=null, $default=null, $currented=false)
     {
-        $paramsArr  = $this->restful;
+        $paramsArr     = &$this->restful;
         
         $_rest_str_arr = $_rest_int_arr = array();
         $_rest_params  = '';
