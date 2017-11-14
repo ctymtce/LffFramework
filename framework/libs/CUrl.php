@@ -45,7 +45,7 @@ class CUrl {
             'Cache-Control: max-age=0', 
         );
         if(isset($options['headers']) && is_array($options['headers'])) {
-            $headers = $headers + $options['headers'];
+            $headers = array_merge($headers, $options['headers']);
         }
         $ch = curl_init();
         //设置常用参数==============

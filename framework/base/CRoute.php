@@ -542,7 +542,6 @@ abstract class CRoute extends CEle {
         $this->router     = $controller. '/'. $action;
         $this->path       = $FOLDERs . $controller;    //路径
         $this->appRoute   = $FOLDERs . $this->router;  //实际路由
-        $this->_append_rest_params($route, $FOLDERs, $controller, $action);
         //整理覆盖参数=========================end
         // echo ("结果****************\n");
         // print_r($this->fc_queuing);
@@ -577,11 +576,13 @@ abstract class CRoute extends CEle {
             $controllerClass = $clazz;
         }
         if(class_exists($controllerClass, false)){
-            $realAction  = 'action'.ucfirst($action);
             $iController = new $controllerClass;
+            $realAction  = 'action'.ucfirst($action);
             if(!method_exists($iController, $realAction)){
-                $realAction = 'actionEntry';
+                $action  = 'entry';
+                $realAction = 'action'.ucfirst($action);
             }
+            $this->_append_rest_params($route, $dirs, $controller, $action);
             return $iController->$realAction($parameters); //执行action方法
         }
     }
