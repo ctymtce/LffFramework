@@ -443,6 +443,7 @@ abstract class CRoute extends CEle {
     }
     function URI2File($route, $sub, &$FOLDERs=null, &$controller=null, &$action=null)
     {
+        $route   = rtrim($route, '/');
         $ctrlLoc = $this->_get_controller_location($sub);//controller root dir
         $action  = 'entry'; //default action
         if(!$route){
