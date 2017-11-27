@@ -401,16 +401,22 @@ abstract class CRoute extends CEle {
 
     public function AliasRoute($uri, &$alias, &$suffix=null, $level=0)
     {
-        $route = $uri;
+        $route = $uri = trim($uri,'/');
         foreach($alias as $fake => $real){
             if(0 == $level){
-                if(false !== ($p=strpos($uri, $fake))){
-                    $suffix = substr($uri, $p+strlen($fake));
-                    $route = $this->AliasRoute($real, $alias, $suffix, ++$level);
-                    break;
+                if($fake === $uri){
+                    return $this->AliasRoute($real, $alias, $suffix, ++$level);
+                }elseif(strpos($fake, '*')){
+                    $fake = rtrim($fake, '/*');
+                    if(0 === strpos($uri, $fake)){
+                        $suffix = substr($uri, strlen($fake));
+                        return $this->AliasRoute($real, $alias, $suffix, ++$level);
+                    }
                 }
             }else{
-                if(isset($alias[$uri])) $route = $alias[$uri];
+                if(isset($alias[$uri])) {
+                    return $this->AliasRoute($alias[$uri], $alias, $suffix, ++$level);
+                }
             }
         }
         return $route;
@@ -432,8 +438,11 @@ abstract class CRoute extends CEle {
                 return $this->route; //url中的路由可只获取一次即可
             }
             $URI   = $this->getUri();
+            if(strpos($URI, '?')){
+                $URI = strstr($URI, '?', true);
+            }
             $route = $this->get('path');
-            if($alias=$this->getConfig('alias')){
+            if($URI && ($alias=$this->getConfig('alias'))){
                 $route  = $this->AliasRoute($URI, $alias, $params);
                 $route .= $params; //params is a string at tail of URI
                 // echo "$URI,$route,$params\n";
@@ -443,12 +452,12 @@ abstract class CRoute extends CEle {
                 //REST style's urls append to rewrite of APACHE
                 //http://www.smartyhub.com/aaa/bbb/?t=139123456 -- route=/aaa/bbb/?t=139123456
                 //so, need remove '?' and '?' after characters.
-                if(strpos($URI, '?')){
-                    // $route = substr($URI, 0, $pos);
+                /*if(strpos($URI, '?')){
                     $route = strstr($URI, '?', true);
                 }else{
                     $route = $URI;
-                }
+                }*/
+                $route = $URI;
             }
             // exit($route);
             $this->route = $route;
@@ -476,12 +485,12 @@ abstract class CRoute extends CEle {
                 if(!isset($pieceArr[$k+1])){ //这意味着路由只显示地设置到目录名(controller和action没设置,也没有rest参数)
                     //如果是一个目录,它下面的默认控制器为该目录名
                     $controller = $piece;
-                    $controller_file = $ctrlLoc. '/'. $FOLDERs. 'K'. ucfirst($controller).'.php';
+                    $controller_file = $ctrlLoc.'/'.$FOLDERs. 'K'. ucfirst($controller).'.php';
                     break;
                 }
                 continue; //继续寻找目录
             }
-            $controller_file = $ctrlLoc. '/'. $FOLDERs. 'K'. ucfirst($piece).'.php';
+            $controller_file = $ctrlLoc.'/'.$FOLDERs. 'K'. ucfirst($piece).'.php';
   
             if(is_file($controller_file)){
                 $controller = $piece;
@@ -490,15 +499,11 @@ abstract class CRoute extends CEle {
                 break;
             }else{
                 //如果最后一个为数字
-                if(strlen(floatval($piece)) == strlen($piece)){
+                $controller  = $this->_get_default_controller_name($FOLDERs);
+                $controller_file = $ctrlLoc.'/'.$FOLDERs. 'K'. ucfirst($controller).'.php';
+                if(is_file($controller_file)){
+                    $action = $piece;
                     break;
-                }else{
-                    $controller  = $this->_get_default_controller_name($FOLDERs);
-                    $controller_file = $ctrlLoc. '/'. $FOLDERs. 'K'. ucfirst($controller).'.php';
-                    if(is_file($controller_file)){
-                        $action = $piece;
-                        break;
-                    }
                 }
             }
             break; //第一个都不是目录就跳出
@@ -559,8 +564,8 @@ abstract class CRoute extends CEle {
         $this->path       = $FOLDERs . $controller;    //路径
         $this->appRoute   = $FOLDERs . $this->router;  //实际路由
         //整理覆盖参数=========================end
-        // echo ("结果****************\n");
         // print_r($this->fc_queuing);
+        // echo ("结果****************\n");
         // echo ("ctrlFile = $ctrlFile\n");
         // echo ("FOLDERs = $FOLDERs\n");
         // echo ("controller = $controller\n");
