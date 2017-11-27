@@ -390,9 +390,30 @@ abstract class CRoute extends CEle {
         }
         return $prefix.trim(trim($uri), '/');
     }
-    function getRequestUri($prefix='/')
+    function getUri($prefix='/')
     {
         return $this->getRequest($prefix);
+    }
+    function getRequestUri($prefix='/')
+    {
+        return $this->getUri($prefix);
+    }
+
+    public function AliasRoute($uri, &$alias, &$suffix=null, $level=0)
+    {
+        $route = $uri;
+        foreach($alias as $fake => $real){
+            if(0 == $level){
+                if(false !== ($p=strpos($uri, $fake))){
+                    $suffix = substr($uri, $p+strlen($fake));
+                    $route = $this->AliasRoute($real, $alias, $suffix, ++$level);
+                    break;
+                }
+            }else{
+                if(isset($alias[$uri])) $route = $alias[$uri];
+            }
+        }
+        return $route;
     }
     /*
     * desc: 获取路由
@@ -410,18 +431,12 @@ abstract class CRoute extends CEle {
             if(true===$lunched && $this->route){
                 return $this->route; //url中的路由可只获取一次即可
             }
-            $URI   = $this->getRequestUri();
+            $URI   = $this->getUri();
             $route = $this->get('path');
-            $aliasArr = $this->getConfig('routeAlias');
-            if($aliasArr){
-                foreach($aliasArr as $fakeRoute => $realRoute){
-                    if(false !== strpos($URI, $fakeRoute)){
-                        $route = $realRoute;
-                        // $this->restparams = $URI; //当前uri作为参数
-                        // $this->restArr[]  = $URI;
-                        break;
-                    }
-                }
+            if($alias=$this->getConfig('alias')){
+                $route  = $this->AliasRoute($URI, $alias, $params);
+                $route .= $params; //params is a string at tail of URI
+                // echo "$URI,$route,$params\n";
             }
             if(0 == strlen($route) && $URI) {
                 //process REST style urls
@@ -723,7 +738,7 @@ abstract class CRoute extends CEle {
         }else{
             $iGET = &$_GET;
         }
-        $v = isset($iGET[$key])?rawurldecode($iGET[$key]):$default;
+        $v = isset($iGET[$key])?(is_array($iGET[$key])?$iGET[$key]:rawurldecode($iGET[$key])):$default;
         $v = $this->_val_safize($v, $filter);
         if($strict){
             $v = $v?$v:$default;
