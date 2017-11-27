@@ -904,7 +904,7 @@ abstract class CRoute extends CEle {
         }
         $this->restArr = array_merge($_rest_int_arr, $_rest_str_arr);
         // $this->dump($this->restArr);
-        $this->restArr['restparams'] = trim($_rest_params, '/');
+        $this->restArr['restful'] = trim($_rest_params, '/');
         if($key){
             return isset($this->restArr[$key])?$this->restArr[$key]:$default;
         }
@@ -914,7 +914,7 @@ abstract class CRoute extends CEle {
     {
         if(is_numeric($key)){
             $pos = $key;
-            $key = 'restparams';
+            $key = 'restful';
         }
         $params = $this->para($key, $default, $currented);
         if($pos && is_string($params)){
@@ -931,9 +931,9 @@ abstract class CRoute extends CEle {
     }
     public function restp($pos=1, $default=null)
     {
-        return $this->rest('restparams', $default, true, $pos);
+        return $this->rest('restful', $default, true, $pos);
     }
-    public function restful($key=null, $default=null, $currented=false)
+    public function restful($key='restful', $default=null, $currented=false)
     {
         return $this->para($key, $default, $currented);
     }
