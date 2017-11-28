@@ -405,10 +405,12 @@ abstract class CRoute extends CEle {
         foreach($alias as $fake => $real){
             if(0 == $level){
                 if($fake === $uri){
+                    $this->AliasRoot = $uri;
                     return $this->AliasRoute($real, $alias, $suffix, ++$level);
                 }elseif(strpos($fake, '*')){
                     $fake = rtrim($fake, '/*');
                     if(0 === strpos($uri, $fake)){
+                        $this->AliasRoot = $fake;
                         $suffix = substr($uri, strlen($fake));
                         return $this->AliasRoute($real, $alias, $suffix, ++$level);
                     }
@@ -632,6 +634,17 @@ abstract class CRoute extends CEle {
         }
         // print_r($this->restful);
         // $this->dump($this->restful);
+    }
+    /*
+    * desc: get requesting's route
+    *
+    */
+    public function hasAlias()
+    {
+        if(isset($this->AliasRoot)) {
+            return $this->AliasRoot;
+        }
+        return null;
     }
     /*
     * desc: route id '/'=>'_'
