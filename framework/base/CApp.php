@@ -58,13 +58,13 @@ class CApp extends CRoute {
         $this->response = $response;
         return $this->Run(null, $params, $extras);
     }
-    public function Clean()
+    public function CleanUp()
     {
-        parent::Clean();
+        parent::CleanUp();
     }
     private function appLanuch($route=null, $parameters=null)
     {
-        $route = $this->getRoute($route, false);
+        $route = $this->getRoute($route, true);
         if($ROUTE_PREFIX = $this->getConfig('ROUTE_PREFIX')){
             $route = '/'.$ROUTE_PREFIX.'/'.ltrim($route,'/');
         }

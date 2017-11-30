@@ -28,6 +28,7 @@ abstract class CRoute extends CEle {
                                                       or
                                     route = path                   + action
                                   */
+    protected $alias      = null; //alias of route
     protected $path       = null;
     protected $router     = null;
     protected $appRoute   = null;
@@ -405,12 +406,12 @@ abstract class CRoute extends CEle {
         foreach($alias as $fake => $real){
             if(0 == $level){
                 if($fake === $uri){
-                    $this->AliasRoot = $uri;
+                    $this->alias = $uri;
                     return $this->AliasRoute($real, $alias, $suffix, ++$level);
                 }elseif(strpos($fake, '*')){
                     $fake = rtrim($fake, '/*');
                     if(0 === strpos($uri, $fake)){
-                        $this->AliasRoot = $fake;
+                        $this->alias = $fake;
                         $suffix = substr($uri, strlen($fake));
                         return $this->AliasRoute($real, $alias, $suffix, ++$level);
                     }
@@ -427,19 +428,22 @@ abstract class CRoute extends CEle {
     * desc: 获取路由
     *
     *@route   --- str cgi初始化时不要将route传进来(cli时可以传)
-    *@lunched --- bool 是否请求过了
+    *@firsted --- bool 是否为第一次请求
     *
     *return     http://www.test.me/search/20/b/3?a=t
     *       --->/search/20/b/3
     */
-    function getRoute($route=null, $lunched=true)
+    function getRoute($route=null, $firsted=false)
     {
         //获取url中的路由==============================
-        if(!$route){
-            if(true===$lunched && $this->route){
+        if(null===$route){
+            if(true === $firsted){ 
+                $this->CleanUp(); //清理场景
+            }
+            if(false===$firsted && $this->route){
                 return $this->route; //url中的路由可只获取一次即可
             }
-            $URI   = $this->getUri();
+            $URI = $this->getUri();
             if(strpos($URI, '?')){
                 $URI = strstr($URI, '?', true);
             }
@@ -556,6 +560,9 @@ abstract class CRoute extends CEle {
                     'action'     => $action,
                 );
             }else{
+                if($route404 = $this->getConfig('route404')){
+                    return $this->runRoute('error/404');
+                }
                 return $this->Exception("The route {$route} does not exists");
             }
         }
@@ -641,10 +648,7 @@ abstract class CRoute extends CEle {
     */
     public function hasAlias()
     {
-        if(isset($this->AliasRoot)) {
-            return $this->AliasRoot;
-        }
-        return null;
+        return $this->alias;
     }
     /*
     * desc: route id '/'=>'_'
@@ -1092,10 +1096,11 @@ abstract class CRoute extends CEle {
             return parent::Exception($message, $prefix, $suffix);
         }
     }
-    public function Clean()
+    public function CleanUp()
     {
         $this->path       = null;
         $this->route      = null;
+        $this->alias      = null;
         $this->router     = null;
         $this->appRoute   = null;
         $this->directory  = null;
