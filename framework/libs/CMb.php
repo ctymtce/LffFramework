@@ -9,7 +9,7 @@
 class CMb {
 
     //mb取子字符串
-    static function mbSub($str, $num, $offset=0)
+    static function mbSub($str, $num, $offset=0, $suff='...')
     {
         if(!function_exists("mb_substr")) return $str;
         $encodeArr = array('UTF-8', 'gbk', 'gb2312', 'CP936', 'ascii');
@@ -17,10 +17,16 @@ class CMb {
         $len    = mb_strlen($str, $encode); 
         // if($len <= $num) return $str;
         $substr = mb_substr($str, $offset, $num, $encode);
+        if($num < $len) $substr .= $suff;
         return $substr;
     }
     //同mbSub
-    static function mbCut($str, $num, $offset=0)
+    static function mbCut($str, $num, $offset=0, $suff='...')
+    {
+        return self::mbSub($str, $num, $offset);
+    }
+    //同mbSub
+    static function cut($str, $num, $offset=0, $suff='...')
     {
         return self::mbSub($str, $num, $offset);
     }
@@ -312,6 +318,47 @@ class CMb {
             $chars .= $char;
         }
         return $chars;
+    }
+
+    static function highlight($string, $tag, $color)
+    {
+        $args = array_slice(func_get_args(), 3);
+        if(empty($args)) return $string;
+        if(is_array($args[0])) $args = $args[0];
+        // print_r($args);
+
+        $tagLeft = "<{$tag} style='color:{$color}'>";
+        $tagRight = "</{$tag}>";
+
+        $patt = '/(?:'.implode('|',$args).')/usi';
+        $wordArr = preg_split($patt, $string);
+
+        preg_match_all($patt, $string, $tagArr);
+        $tagArr = array_pop($tagArr);
+
+        $len1 = count($wordArr);
+        $len2 = count($tagArr);
+        $subs = $text = $wordArr[0];
+        $len  = self::mbLen($subs);
+        $num  = self::mbLen($string);
+
+        $prex_null = empty($wordArr[0])?1:0; // 记录前面有几个是空的
+        for($i=1; $i<$len1; $i++){
+            $term  = $wordArr[$i];
+            $text .= ($tagLeft.$tagArr[$i-1].$tagRight . $term);
+            $_len  = self::mbLen($term);
+            $len  += $_len;
+            $prex_null += empty($subs)&&empty($term[0])?1:0;
+            if($len < $num){
+                $subs .= ($tagLeft.$tagArr[$i-1].$tagRight . $term);
+            }else{
+                $l = $num - ($len - self::mbLen($term)); //还差几个字符到$num个
+                $subs .= ($tagLeft.$tagArr[$i-1].$tagRight . self::mbSub($term,$l));
+                if(1 == $i%2) $subs .= $tagArr[$i]; //补齐"关闭"标签
+                break;
+            }
+        }
+        return $subs;
     }
 };
 
