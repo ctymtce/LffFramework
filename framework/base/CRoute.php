@@ -561,7 +561,7 @@ abstract class CRoute extends CEle {
                 );
             }else{
                 if($route404 = $this->getConfig('route404')){
-                    return $this->runRoute('error/404');
+                    return $this->runRoute($route404);
                 }
                 return $this->Exception("The route {$route} does not exists");
             }
