@@ -876,6 +876,18 @@ abstract class CRoute extends CEle {
         return $dataArr;
     }
     /*
+    * desc: get php raw content
+    *
+    */
+    function raw()
+    {
+        if($this->request){
+            return $this->request->rawContent();
+        }else{
+            return file_get_contents("php://input");
+        }
+    }
+    /*
     * desc: 获取uri中的参数
     *
     *@key     --- str 键为空时反回所有参数
