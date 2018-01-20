@@ -28,13 +28,15 @@ abstract class CRoute extends CEle {
                                                       or
                                     route = path                   + action
                                   */
-    protected $alias      = null; //alias of route
     protected $path       = null;
+    protected $alias      = null; //alias of route
+    protected $truth      = null; //alias opposite route
     protected $router     = null;
     protected $appRoute   = null;
     protected $directory  = null;
     protected $controller = null;
     protected $action     = null;
+
     protected $restArr    = array();
     protected $restful    = array(); //用于暂存
 
@@ -407,11 +409,13 @@ abstract class CRoute extends CEle {
             if(0 == $level){
                 if($fake === $uri){
                     $this->alias = $uri;
+                    $this->truth = $real;
                     return $this->AliasRoute($real, $alias, $suffix, ++$level);
                 }elseif(strpos($fake, '*')){
                     $fake = rtrim($fake, '/*');
                     if(0 === strpos($uri, $fake)){
                         $this->alias = $fake;
+                        $this->truth = $real;
                         $suffix = substr($uri, strlen($fake));
                         return $this->AliasRoute($real, $alias, $suffix, ++$level);
                     }
@@ -650,6 +654,11 @@ abstract class CRoute extends CEle {
     {
         return $this->alias;
     }
+    public function getTruth()
+    {
+        return $this->truth;
+    }
+    
     /*
     * desc: route id '/'=>'_'
     *
