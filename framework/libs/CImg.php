@@ -22,7 +22,7 @@ class CImg{
         if(false === $iArr) return false;
         
         $skipsmall = isset($xArr['skipsmall'])?$xArr['skipsmall']:true;
-        $scope     = isset($xArr['scope'])?$xArr['scope']:true;
+        $scope     = isset($xArr['scope'])?$xArr['scope']:false;
         $suffix    = isset($xArr['suffix'])?$xArr['suffix']:$dWidth.$dHeight;
         $topng     = isset($xArr['topng'])?$xArr['topng']:false; //是否转换为png
 
@@ -303,6 +303,11 @@ class CImg{
         }
         return $ok;
     }
+    static function Cutting($fpimg, $dWidth=250, $dHeight=280, $xArr=array())
+    {
+        if(!is_array($xArr)) $xArr = array();
+        return self::cutImg($fpimg, $dWidth, $dHeight, $xArr);
+    }
     
     
     static function removeBlank($fpimg)
@@ -549,7 +554,9 @@ class CImg{
 };
 ini_set("memory_limit","-1");
 
-// CImg::cutImg("1.gif",256,256,array('scope'=>false, 'topng'=>true, 'x1'=>250,'y1'=>494,'x2'=>516,'y2'=>627));
+// CImg::Cutting("b.jpg",300,400);
+// echo CImg::Cutting("b.jpg",500,300, array('scope'=>false));
+// CImg::Cutting("1.gif",256,256,array('scope'=>false, 'topng'=>true, 'x1'=>250,'y1'=>494,'x2'=>516,'y2'=>627));
 /*
 include 'CTool.php';
 $t1 = CTool::getUTime();
