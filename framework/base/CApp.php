@@ -170,9 +170,12 @@ class CApp extends CRoute {
             $this->Exception('The model class file does not exists('.basename($modelFile).')');
         }
         // require($modelFile);
-        $this->requireOnce($modelFile);
-        if(!class_exists($class,false)) {
+        $clazz = $this->requireOnce($modelFile);
+        if(false===$clazz || !class_exists($class,false)) {
             $this->httpError(500, 'The model class does not exists('.$class.')!');
+        }
+        if(strpos($clazz, '\\')){
+            return $this->Arr726128772794766[$id] = new $clazz;
         }
         return $this->Arr726128772794766[$id] = new $class;
     }
@@ -215,17 +218,22 @@ class CApp extends CRoute {
     *@cid --- str['C','D','F','M','P']
     *retrun cache instance
     */
-    function getCache($cid='F', $dir='/tmp')
+    function getCache($cid='F')
     {
         if(!isset($this->Arr690310646802722)){
             $this->Arr690310646802722 = null;
         }
+        $dir = $this->getConfig('chedir', '/tmp');
         $id = md5('cache_'.$cid.'_'.$dir);
         if(isset($this->Arr690310646802722[$id]) && is_resource($this->Arr690310646802722[$id])){
             return $this->Arr690310646802722[$id];
         }
         $class = 'C'.$cid.'Cache';
         return $this->Arr690310646802722[$id] = new $class($dir);
+    }
+    function LoadCache($cid='C', $dir='/tmp')
+    {
+        
     }
     /*
     *desc: get redis instance

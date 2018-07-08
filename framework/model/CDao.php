@@ -1166,10 +1166,11 @@ class CDao extends CEle{
     public function ftExtras($table, &$exArr)
     {
         if(!$exArr || !is_array($exArr)) return;
+        $main_prex = isset($exArr['main_prex'])?$exArr['main_prex']:$table;
         foreach($exArr as $k=>$v){
             if(is_array($v))continue;
             if(strpos($v,':') && 'join' == strtolower(substr($k,0,4))){
-                $join_table = $table . substr($k,4);
+                $join_table = $main_prex . substr($k,4);
                 if(is_string($v)){
                     $exArr['join'][$join_table] = $v;
                     unset($exArr[$k]);

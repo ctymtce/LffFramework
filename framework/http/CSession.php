@@ -8,7 +8,7 @@ class CSession extends CEle{
     private $folder  = '/tmp/sessions';
     private $prefix  = 'PHPS_';
     private $suffix  = '';
-    private $enable  = false;
+    private $enable  = true;
     private $_is_gc  = 0;
 
     public function options($options=array()){
@@ -38,7 +38,10 @@ class CSession extends CEle{
             $this->cgimode = $options['cgimode'];
         }
     }
-
+    public function disabled()
+    {
+        $this->enable = false;
+    }
     public function init($sessId, &$error='')
     {
         if(!$this->folder) {
@@ -131,6 +134,7 @@ class CSession extends CEle{
     */
     public function destroy($sessId)
     {
+        if(!$this->enable) return false;
         $file = $this->_get_file($sessId);
         if(is_file($file)) {
             return @unlink($file);
