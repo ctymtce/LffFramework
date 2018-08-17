@@ -209,7 +209,7 @@ abstract class CEle {
     *
     *return array(must be)
     */
-    public function getArrayColumn($dataArr, $field, $distinct=true, $filter=false, $where=null)
+    public function getArrayColumn($dataArr, $field='id', $distinct=true, $filter=false, $where=null)
     {
         if(!$dataArr || is_scalar($dataArr)) return array();
         if($where){

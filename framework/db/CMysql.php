@@ -246,7 +246,7 @@ class CMysql extends CPdb {
             $start  = ($page-1)*$limit;
             $limitstring = "limit {$start},{$limit}";
         }
-        $forupdate = isset($exArr['forupdate'])?'for update':'';
+        $locking = isset($exArr['locking'])?'for update':'';
 
         $where  = empty($where)?'':" where {$where}";
         $order  = empty($order)?'':$order;
@@ -254,7 +254,7 @@ class CMysql extends CPdb {
         if(false === strpos($table, '.')){
             $table  = '`'.trim($table,'`').'`';
         }
-        return rtrim("select {$fields} from {$table} {$where} {$group} {$having} {$order} {$limitstring} {$forupdate}");
+        return rtrim("select {$fields} from {$table} {$where} {$group} {$having} {$order} {$limitstring} {$locking}");
     }
     public function getDesc($table)
     {

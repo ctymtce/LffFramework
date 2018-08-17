@@ -1111,6 +1111,17 @@ abstract class CRoute extends CEle {
             );
         }
     }
+    protected function Agent()
+    {
+        if(2 == $this->cgimode){
+            return isset($this->request->server['agent'])?$this->request->server['agent']:null;
+        }else{
+            return isset($_SERVER['HTTP_USER_AGENT'])?
+                $_SERVER['HTTP_USER_AGENT']:(
+                isset($_SERVER['USER_AGENT'])?$_SERVER['USER_AGENT']:null
+            );
+        }
+    }
     public function Exception($message, $prefix='<pre>', $suffix='</pre>')
     {
         if($this->getConfig('debug')){

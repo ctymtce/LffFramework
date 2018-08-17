@@ -337,10 +337,12 @@ abstract class CPdb {
                         $whone = "match($field) against({$value})";
                         break;
                     case 'find_in_set':
-                        if(is_array($value)){
-                            $value = "'" . addslashes(current($value)) . "'";
+                        if(!empty($value)){
+                            if(is_array($value)){
+                                $value = "'" . addslashes(current($value)) . "'";
+                            }
+                            $whone = "find_in_set($value,$field)";
                         }
-                        $whone = "find_in_set($value,$field)";
                         break;
                     default: //=,>,>=,<,<=,!=,<>
                         if(is_null($value)){

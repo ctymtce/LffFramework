@@ -282,7 +282,7 @@ class CDao extends CEle{
     *                       table1 => fk1:pk1|wh1;fk2:pk2|wh2;...,
     *                       table2 => fk:pk,(主表的外建和副表的主键序列)
     *                       table3 => fk:pk|flat=f1,f2...(扁平化的组装)
-    *                       table4 => fk:pk|defaults=comments=0,services=0
+    *                       table4 => fk:pk|defaults=comments=0&services=0
     *                   )(join查询)
     *               )
     *

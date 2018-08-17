@@ -171,8 +171,8 @@ class CApp extends CRoute {
         }
         // require($modelFile);
         $clazz = $this->requireOnce($modelFile);
-        if(false===$clazz || !class_exists($class,false)) {
-            $this->httpError(500, 'The model class does not exists('.$class.')!');
+        if(false===$clazz || (1==$clazz && !class_exists($class,false))) {
+            $this->httpError(500, 'The model class does not exists('.$modelFile.')!');
         }
         if(strpos($clazz, '\\')){
             return $this->Arr726128772794766[$id] = new $clazz;
