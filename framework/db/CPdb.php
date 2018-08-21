@@ -271,7 +271,7 @@ abstract class CPdb {
                         $bL = '(';   $bR = ')';
                     }
                     //注意:如果depth>1那么操作符(and,or)要使用上一维的操作符
-                    $where .= ($where?$space.trim($depth>1?$andordft:$andordft_cur):'') .$space. $bL .$subwh. $bR;
+                    $where .= ($where?$space.trim($depth>1?$andordft:($subwh?$andordft_cur:'')):'') .$space. $bL .$subwh. $bR;
                     $where  = trim($where);
                 }else{
                     $where .= ($where?$space.$andordft:null).$space.$whorvalue;

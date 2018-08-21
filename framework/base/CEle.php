@@ -388,15 +388,21 @@ abstract class CEle {
     {
         if(!is_array($array))return $array;
         foreach ($array as $k=>&$vs){
-            self::removeArrayNull($vs, $emptystring, $zero, $spval);
-            if(is_null($vs)){
-                unset($array[$k]);
-            }else if(''===$vs){
-                if($emptystring)unset($array[$k]);
-            }else if(0===$vs){
-                if($zero)unset($array[$k]);
-            }else if($spval===$vs){
-                unset($array[$k]);
+            if(is_array($vs)){
+                if(count($vs) > 0){
+                    $this->removeArrayNull($vs, $emptystring, $zero, $spval);
+                }
+                if(0 == count($vs))unset($array[$k]);
+            }else{
+                if(is_null($vs)){
+                    unset($array[$k]);
+                }else if(''===$vs){
+                    if($emptystring)unset($array[$k]);
+                }else if(0===$vs){
+                    if($zero)unset($array[$k]);
+                }else if($spval===$vs){
+                    unset($array[$k]);
+                }
             }
         }
         return $array;
