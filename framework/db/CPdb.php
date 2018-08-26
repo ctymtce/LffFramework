@@ -61,6 +61,7 @@ abstract class CPdb {
                 $this->encoding = $paraArr['encoding'];
             }
             try {
+                ob_start();
                 $this->pdb = new PDO($this->dsn, $this->user, $this->pswd, array(
                         PDO::ATTR_TIMEOUT => 3,
                         PDO::ATTR_PERSISTENT => true,
@@ -69,6 +70,7 @@ abstract class CPdb {
                 if('mysql' == $this->driver){
                     $this->execute('set names '.$this->encoding);
                 }
+                ob_clean();
             }catch(PDOException $e){
                 $this->error = $e->getMessage();
                 $this->pdb = null;
