@@ -16,7 +16,12 @@ class CMysql extends CPdb {
     {
         $this->dbName = $dbName;
         //'mysql:dbname=mysql;host=127.0.0.1';
-        $params['dsn'] = "mysql:dbname={$dbName};host={$host}";
+        $params['dsn'] = "mysql:dbname={$dbName};";
+        if(strpos($host,'.sock')){
+            $params['dsn'] .= "unix_socket={$host}";
+        }else{
+            $params['dsn'] .= "host={$host}";
+        }
         parent::__construct($params);
     }
     public function getEncoding()
