@@ -251,7 +251,11 @@ class CSession extends CEle{
                 $sesses[$k] = $v;
             }
         }else{
-            $sesses[$kvs] = $val;
+            if(is_null($val)) {
+                unset($sesses[$kvs]);
+            }else{
+                $sesses[$kvs] = $val;
+            }
         }
 
         $ok = $this->write($sessId, $sesses);
