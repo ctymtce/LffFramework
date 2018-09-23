@@ -70,7 +70,7 @@ abstract class CPdb {
                 if('mysql' == $this->driver){
                     $this->execute('set names '.$this->encoding);
                 }
-                ob_clean();
+                ob_get_clean();
             }catch(PDOException $e){
                 $this->error = $e->getMessage();
                 $this->pdb = null;
@@ -102,7 +102,7 @@ abstract class CPdb {
             ob_start();
             $Attributes = $this->pdb->getAttribute(PDO::ATTR_SERVER_INFO);
             $linkstring = ob_get_clean();
-        }catch(PDOException $e){
+        }catch(Exception $e){
             $linkstring = $e->getMessage();
         }
         if(false === $Attributes || strpos($linkstring, 'server has gone away')){

@@ -58,11 +58,7 @@ abstract class CRoute extends CEle {
     public $DaoLoc       = ''; //dao目录
     public $UiLoc        = '';
 
-    public $TPL_APP      = ''; //smarty模板目录
-    public $TPL_SUB      = ''; //smarty模板目录
     public $TPL_LOC      = ''; //smarty模板目录
-    public $TPL_INC      = ''; //smarty模板目录
-    public $TPL_LAY      = ''; //smarty模板目录
 
     public $UiUrl        = ''; //指向当前sub下ui目录
     public $SubUrl       = ''; //指向当前sub目录
@@ -118,9 +114,6 @@ abstract class CRoute extends CEle {
         $this->UiLoc   = $this->AssetsLoc.'/ui/'.$ui;
 
         $this->TPL_UI  = $this->TPL_LOC .'/'.$ui;
-        $this->TPL_COM = $this->TPL_LOC .'/common';
-        $this->TPL_INC = $this->TPL_UI .'/templates/include';
-        $this->TPL_LAY = $this->TPL_UI .'/templates/layout';
     }
 
     private function _get_controller_location($sub=null)
@@ -1099,6 +1092,15 @@ abstract class CRoute extends CEle {
     function isPost()
     {
         return 'POST'==$this->method()?true:false;
+    }
+    public function getCookie($key, $default=null)
+    {
+        if(2 == $this->cgimode){
+            return isset($this->request->cookie[$key])?$this->request->cookie[$key]:$default;
+        }else{
+            if(!isset($_COOKIE))return $default;
+            return isset($_COOKIE[$key])?$_COOKIE[$key]:$default;
+        }
     }
     protected function getRef()
     {

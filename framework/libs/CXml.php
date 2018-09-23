@@ -121,6 +121,29 @@ class CXml extends DomDocument{
         }
         return $result;
     }
+    function toArray($xml)
+    {
+        if (file_exists($xml)) {
+            libxml_disable_entity_loader(false);
+            $xml = simplexml_load_file($xml,'SimpleXMLElement',  LIBXML_NOCDATA|LIBXML_NOBLANKS);
+        }else{
+            libxml_disable_entity_loader(false);
+            $xml = simplexml_load_string($xml,'SimpleXMLElement', LIBXML_NOCDATA|LIBXML_NOBLANKS);
+        }
+        $rootkey = $xml->getName();
+        $documents = json_decode(json_encode($xml),true);
+        if(isset($documents['@attributes'])){
+            $attrs = array();
+            foreach($documents['@attributes'] as $k=>$v){
+                $attrs[$rootkey.'.'.$k] = $v;
+            }
+            unset($documents['@attributes']);
+            $documents = array_merge($attrs, $documents);
+        }
+        return array(
+            $rootkey => $documents
+        );
+    }
 
     //添加顶层结点
     function addRoot($name="root")

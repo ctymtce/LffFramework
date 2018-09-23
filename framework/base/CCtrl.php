@@ -90,14 +90,12 @@ abstract class CCtrl extends CEle {
             $this->smarty->assign('UI_URL',     $App->UiUrl);
             $this->smarty->assign('UI_LOC',     $App->UiLoc);
             $this->smarty->assign('TPL_UI',     $App->TPL_UI);
-            $this->smarty->assign('TPL_APP',    $App->TPL_APP);
-            $this->smarty->assign('TPL_COM',    $App->TPL_COM);
-            $this->smarty->assign('TPL_LOC',    $tpl_base_dir);
-            $this->smarty->assign('TPL_INC',    $tpl_base_dir.'/templates/include');
-            $this->smarty->assign('TPL_ROOT',   $tpl_base_dir.'/templates');
-            $this->smarty->assign('TPL_CACHE',  $tpl_base_dir.'/cache');
-            $this->smarty->assign('TPL_LAYOUT', $tpl_base_dir.'/templates/layout');
-            $this->smarty->assign('TPL_CONFIG', $tpl_base_dir.'/congigs');
+            $this->smarty->assign('TPL_LOC',    $App->TPL_LOC);
+            $this->smarty->assign('TPL_COM',    $App->TPL_LOC.'/common');
+            $this->smarty->assign('TPL_INC',    $App->TPL_UI.'/templates/include');
+            $this->smarty->assign('TPL_ROOT',   $App->TPL_UI.'/templates');
+            $this->smarty->assign('TPL_CACHE',  $App->TPL_UI.'/cache');
+            $this->smarty->assign('TPL_LAYOUT', $App->TPL_UI.'/templates/layout');
         }
         return $this->smarty;
     }
