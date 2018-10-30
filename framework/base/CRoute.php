@@ -283,18 +283,6 @@ abstract class CRoute extends CEle {
             $baseUrl  = str_replace(':'.$port, '', $baseUrl);
             $baseUrl .= ':'.$port;
         }
-        $dft_ctrl_name = $this->_get_default_controller_name();
-        if(null === $route){
-            $route = $dft_ctrl_name.'/'.$defaction;
-        }else{
-            if(false === strpos($route,'/')){
-                if(0 == strlen($route)) {
-                    $route = $dft_ctrl_name.'/'.$defaction;
-                }else {
-                    $route .= '/'.$defaction;
-                }
-            }
-        }
         unset($paraArr[$this->routeKey]);
         foreach($paraArr as $k=>&$v) {
             if(!is_string($k)) unset($paraArr[$k]);
@@ -304,18 +292,20 @@ abstract class CRoute extends CEle {
             $anchor='#'.$paraArr['#'];
             unset($paraArr['#']);
         }
-        $route = trim($route,'/');
         $query = http_build_query($paraArr);
         $query = (strlen($query)>0)?'&'.$query:'';
         if(2 == $this->urlmode) {
-            $query    = trim($query, '&');
-            $routeUrl = $baseUrl.'/'.$route.'?'.$query.$anchor;
+            $query = trim($query, '&');
+            if(!$route){
+                $slash = '';
+            }else{
+                $slash = ('/'==$route[0] || '/'==substr($baseUrl,-1))?'':'/';
+            }
+            $routeUrl = $baseUrl.$slash.$route;
+            if($query || $anchor) $routeUrl .= '?'.$query.$anchor;
         }else {
             $routeUrl = $baseUrl.'/?path='.$route.$query.$anchor;
         }
-        $routeUrl = trim($routeUrl, '?');
-        $routeUrl = trim($routeUrl, '/');
-        // $routeUrl = str_replace('/entry', '', $routeUrl);
         return $routeUrl;
     }
     public function mkUrl($route=null, $paraArr=array(), $strict=true)
