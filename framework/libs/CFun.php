@@ -219,6 +219,36 @@ class CFun {
         return $c < 0 ? $c += 4294967296 : $c;
     }
     /*
+    * desc: 分数化简
+    *
+    *@numerator  --- 分子
+    *@denominator --- 分母
+    *
+    *return arr eg:numerator=4,denominator=8 -> array(1,2)
+    *           4/8 -> 1/2
+    */
+    static function FractionalReduction($numerator, $denominator, &$divi_string='', $divisor=':')
+    {
+        $numerator   = intval($numerator);
+        $denominator = intval($denominator);
+
+        for($try=10; $try>=2&&$numerator>1; $try--){
+            do{
+                // echo "$numerator,$denominator,$try\n";
+                if(0==$numerator%$try && 0==$denominator%$try){
+                    $numerator /= $try;
+                    $denominator /= $try;
+                }else{
+                    break;
+                }
+            }while($numerator>1);
+        }
+
+        $divi_string = "{$numerator}{$divisor}{$denominator}";
+
+        return array($numerator, $denominator);
+    }
+    /*
     * desc: 将n个数字编码成一个唯一的编码
     *
     *@args --- 任意参数
@@ -313,7 +343,7 @@ class CFun {
         return $array;
     }
     /*
-    * desc: 编辑转换
+    * desc: 编码转换
     * 如果ArrOr是array那返回亦是array,反之，如果是scalar那返回亦是scalar
     *@Arror --- mix 
     *
