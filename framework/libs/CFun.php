@@ -221,13 +221,13 @@ class CFun {
     /*
     * desc: 分数化简
     *
-    *@numerator  --- 分子
+    *@numerator   --- 分子
     *@denominator --- 分母
     *
     *return arr eg:numerator=4,denominator=8 -> array(1,2)
     *           4/8 -> 1/2
     */
-    static function FractionalReduction($numerator, $denominator, &$divi_string='', $divisor=':')
+    static function FractionalSimplify($numerator, $denominator, &$divi_string='', $divisor=':')
     {
         $numerator   = intval($numerator);
         $denominator = intval($denominator);
@@ -247,6 +247,33 @@ class CFun {
         $divi_string = "{$numerator}{$divisor}{$denominator}";
 
         return array($numerator, $denominator);
+    }
+    /*
+    * desc: 分数化简
+    *
+    *@decimal  --- 一个小数
+    *
+    *return arr eg:0.333 -> 1/3
+    */
+    static function DecimalsFractional($decimal, &$divi_string='', $divisor=':')
+    {
+        $decimal  = floatval($decimal);
+        $integer  = intval($decimal);
+        $decimal -= $integer;
+
+        $denominator = 2;
+        for(;$denominator<=10000; $denominator++){
+            $rx = $decimal * $denominator;
+            $numerator = round($rx, 2);
+            // echo "$rx($numerator) = $decimal * $denominator \n";
+            if(intval($numerator) == $numerator) {
+                $divi_string = "{$numerator}{$divisor}{$denominator}";
+                break;
+            }
+        }
+        // echo "{$divi_string} ********\n";
+
+        return array($numerator, $denominator, $integer);
     }
     /*
     * desc: 将n个数字编码成一个唯一的编码
