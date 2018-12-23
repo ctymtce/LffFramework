@@ -339,11 +339,13 @@ abstract class CPdb {
                         $whone = "match($field) against({$value})";
                         break;
                     case 'find_in_set':
+                    case 'find_ni_set':
                         if(!empty($value)){
                             if(is_array($value)){
                                 $value = "'" . addslashes(current($value)) . "'";
                             }
                             $whone = "find_in_set($value,$field)";
+                            if('find_ni_set' == $op) $whone = 'not '.$whone;
                         }
                         break;
                     default: //=,>,>=,<,<=,!=,<>
