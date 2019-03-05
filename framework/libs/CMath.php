@@ -31,4 +31,19 @@ class CMath {
             return self::bcDechex($remain).dechex($last);
         }
     }
+    /*
+    * desc: (-∞,100]->100,[101,200]->200,...,(1001,2000)->2000,....
+    *
+    *@min --- return minimal value 
+    *
+    */
+    public static function UpInteger($val, $min=100)
+    {
+        $val = floatval($val);
+        if($val < $min) return $min;
+        $exp = strlen($val) - 1;
+        $mul = pow(10, $exp);
+        $int = ceil($val/$mul) * $mul;
+        return max($int, $min);
+    }
 };
