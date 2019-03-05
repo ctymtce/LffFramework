@@ -323,7 +323,7 @@ class CImg{
         return sprintf("0x%02x%02x%02x",$r,$g,$b);
     }
     //return resource
-    static function createImageFromAny($fpimg, $topngOr=false)
+    static function createImageFromAny($fpimg, $topngOr=false, $ftsize=4)
     {
         $isPng = false;
         if(is_file($fpimg)){//从文件
@@ -371,9 +371,8 @@ class CImg{
                     break;
             }
         }else{//从字符串
-            $fontsize  = 6;
-            $dWidth    = strlen($fpimg) * imagefontwidth($fontsize);
-            $dHeight   = imagefontheight($fontsize);
+            $dWidth    = strlen($fpimg) * imagefontwidth($ftsize);
+            $dHeight   = imagefontheight($ftsize);
             $graphOld  = imagecreatetruecolor($dWidth, $dHeight);
             $textcolor = imagecolorallocate($graphOld, 0, 0, 255);
             $rgbblack  = imagecolorallocate($graphOld, 0, 0, 0);
@@ -381,13 +380,13 @@ class CImg{
             imagecolortransparent($graphOld, $rgbblack);
             imagefill($graphOld, 0, 0, imagecolorallocatealpha($graphOld,0,0,0,127));
             
-            imagestring($graphOld, $fontsize, 0, 0, $fpimg, $textcolor);
-            if($topngOr){//此时表示是否输出
+            imagestring($graphOld, $ftsize, 0, 0, $fpimg, $textcolor);
+            /*if($topngOr){//此时表示是否输出
                 header("Content-Type: image/png");
                 Imagepng($graphOld);
                 ImageDestroy($graphOld);
                 exit;
-            }
+            }*/
             return $graphOld;
         }
         if($topngOr && !$isPng){
@@ -402,11 +401,12 @@ class CImg{
     /*
     * desc: 添加水印
     *
-    *@$fpimg  --- string(被水印图片的地址)
-    *@fpout   --- png的输出地址(黑夜与fpjpg同目录)
+    *@$fpimg   --- string(被水印图片的地址)
+    *@fpmarkOr --- 水印图片(通常是小图片logo)或文字
+    *@minwidth --- 主图最小宽度(小于它则不加水印)
     * return: true if success or else false
     */
-    static function Watermarking($fpimg, $fpmarkOr, $rename=true, $minwidth=256)
+    static function Watermarking($fpimg, $fpmarkOr, $rename=true, $saved=true, $ftsize=4, $opacity=20, $minwidth=256)
     {
         $fporg = $fpimg;
         if($rename){//保存原文件
@@ -418,21 +418,45 @@ class CImg{
             file_put_contents($fporg, file_get_contents($fpimg));
         }
         $graphMain = self::createImageFromAny($fpimg);
-        $graphMark = self::createImageFromAny($fpmarkOr, false);
+        
         $mainW = imagesx($graphMain);
         $mainH = imagesy($graphMain);
-        $markW = imagesx($graphMark);
-        $markH = imagesy($graphMark);
+        
         if($mainW < $minwidth){
             ImageDestroy($graphMain);
             ImageDestroy($graphMark);
             return $fporg;
         }
-        imagecopyresampled($graphMain, $graphMark, $mainW-$markW-8, $mainH-$markH-8, 0, 0, $markW, $markH, $markW, $markH);
+        if(is_array($fpmarkOr)){
+            $rgba = imagecolorallocatealpha($graphMain, 0, 0, 0, $opacity);
+            foreach($fpmarkOr as $point){
+                if(isset($point['rgba']) && strlen($point['rgba'])>=2){
+                    $_r_g_b_a = str_split(trim($point['rgba'],' #&'), 2);
+                    $_r_g_b_a[0] = hexdec($_r_g_b_a[0]);
+                    $_r_g_b_a[1] = isset($_r_g_b_a[1])?hexdec($_r_g_b_a[1]):0;
+                    $_r_g_b_a[2] = isset($_r_g_b_a[2])?hexdec($_r_g_b_a[2]):0;
+                    $_r_g_b_a[3] = isset($_r_g_b_a[3])?hexdec($_r_g_b_a[3]):0;
+                    $rgba = imagecolorallocatealpha($graphMain, $_r_g_b_a[0], $_r_g_b_a[1], $_r_g_b_a[2], $_r_g_b_a[3]);
+                    // print_r($_r_g_b_a);exit;
+                }
+                imagestring($graphMain, $ftsize, $point['x'], $point['y'], $point['text'], $rgba);
+            }
+        }else{
+            $graphMark = self::createImageFromAny($fpmarkOr, true, $ftsize);
+            $markW = imagesx($graphMark);
+            $markH = imagesy($graphMark);
+            imagecopyresampled($graphMain, $graphMark, $mainW-$markW-8, $mainH-$markH-8, 0, 0, $markW, $markH, $markW, $markH);
+            ImageDestroy($graphMark);
+        }
         imagesavealpha($graphMain, true); //不失真
-        imagepng($graphMain, $fpimg);
+
+        if($saved){
+            imagepng($graphMain, $fpimg);
+        }else{
+            header("Content-Type: image/png");
+            imagepng($graphMain);
+        }
         ImageDestroy($graphMain);
-        ImageDestroy($graphMark);
         return $fporg;
     }
 
