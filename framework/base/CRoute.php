@@ -453,10 +453,10 @@ abstract class CRoute extends CEle {
                 $route = $URI;
             }
             // exit($route);
-            $this->route = ltrim($route, '/');
+            $this->route = $route = ltrim($route, '/');
         }
         //获取url中的路由===========================end
-        return $this->route;
+        return $route;
     }
     function URI2File($route, $sub, &$FOLDERs=null, &$controller=null, &$action=null)
     {
