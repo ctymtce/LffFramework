@@ -16,12 +16,9 @@ class CApp extends CRoute {
 
     private $session    = null;
 
-    private $charset    = 'UTF-8';
-    
     private $redis      = null;
     
     private $mail       = null;
-    private $rsa        = null;
     private $pdf        = null;
 
     public function __construct(&$configs)
@@ -37,9 +34,9 @@ class CApp extends CRoute {
     */
     public function PreInit()
     {
-        date_default_timezone_set(
-            $this->getConfig('timezone','Asia/shanghai')
-        );
+        if($timezone = $this->getConfig('timezone')){
+            date_default_timezone_set($timezone);
+        }
     }
     public function Run($route=null, $parameters=null, $configs=null)
     {
@@ -167,12 +164,12 @@ class CApp extends CRoute {
         }
         if(!is_file($modelFile)) {
             // $this->httpError(500, 'The model class file does not exists('.basename($modelFile).')!');
-            $this->Exception('The model class file does not exists('.basename($modelFile).')');
+            return $this->Exception('The model class file does not exists('.basename($modelFile).')');
         }
         // require($modelFile);
         $clazz = $this->requireOnce($modelFile);
         if(false===$clazz || (1==$clazz && !class_exists($class,false))) {
-            $this->httpError(500, 'The model class does not exists('.$modelFile.')!');
+            return $this->httpError(500, 'The model class does not exists('.$modelFile.')!');
         }
         if(strpos($clazz, '\\')){
             return $this->Arr726128772794766[$id] = new $clazz;
@@ -218,12 +215,12 @@ class CApp extends CRoute {
     *@cid --- str['C','D','F','M','P']
     *retrun cache instance
     */
-    function getCache($cid='F')
+    function getCache($cid='F', $chedir='/tmp')
     {
         if(!isset($this->Arr690310646802722)){
             $this->Arr690310646802722 = null;
         }
-        $dir = $this->getConfig('chedir', '/tmp');
+        $dir = $this->getConfig('chedir', $chedir);
         $id = md5('cache_'.$cid.'_'.$dir);
         if(isset($this->Arr690310646802722[$id]) && is_resource($this->Arr690310646802722[$id])){
             return $this->Arr690310646802722[$id];
@@ -233,7 +230,7 @@ class CApp extends CRoute {
     }
     function LoadCache($cid='C', $dir='/tmp')
     {
-        
+        return $this->getCache($cid, $dir);
     }
     /*
     *desc: get redis instance
@@ -241,9 +238,9 @@ class CApp extends CRoute {
     */
     function getRedis($tonew=false)
     {
-        $redisArr = $this->getConfig('redis');
-        if(isset($redisArr['enable']) && 1==intval($redisArr['enable'])){
-            $server = array_shift($redisArr['servers']);
+        $rCfgs = $this->getConfig('redis');
+        if(isset($rCfgs['enable']) && 1==intval($rCfgs['enable'])){
+            $server = array_shift($rCfgs['servers']);
             $ip   = isset($server['ip'])?$server['ip']:'127.0.0.1';
             $port = isset($server['port'])?$server['port']:6379;
             $auth = isset($server['auth'])?$server['auth']:null;

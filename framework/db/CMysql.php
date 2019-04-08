@@ -52,6 +52,7 @@ class CMysql extends CPdb {
         $sql = $this->mkQuery($table, $exArr);
         if(!isset($exArr['only_data']) || (isset($exArr['only_data']) && !$exArr['only_data'])){
             $count = $this->count($table, $exArr['where'], $exArr);
+            if(0 == $count) return array();
         }
         return $this->query($sql);
     }
@@ -339,32 +340,32 @@ class CMysql extends CPdb {
     public function getCount($sql)
     {
         if(null === $this->pdb) return false;
-        $funArr  = array("sum","count","min","max","avg","distinct","group", "union");    //聚合函数    
-        foreach($funArr as $fun){
-            $fun = strpos($sql,$fun);
-            if($fun)break;
+        $pos_space1 = strpos($sql, ' ');//第一个空格的位置
+        $funArr  = array('sum','count','distinct','group','min','max','avg','union');    //聚合函数    
+        foreach($funArr as $fn){
+            if($fn = stripos($sql,$fn))break;
         }
-        $sqlType = preg_match("/[a-z]*\S/si",$sql,$sqlTypeArr);
-        $sqlType = strtolower($sqlTypeArr[0]);
-        if($sqlType=="select" && !$fun) {
+        $sqlType = strtolower(trim(substr($sql, 0, $pos_space1),'(` )'));
+        if($sqlType=="select" && !$fn) {
             //(为select型,且没有聚合函数)
-            preg_match("/limit\s+?([0-9]*),{0,1}\s*?([0-9]*)/si", $sql, $arr);
-            array_shift($arr);
+            $reSql = strtolower(substr($sql, $pos_space1+1)); //re:sql剩余部分
             $start = $limit = 0;
-            if(count($arr) > 0) {
-                if(empty($arr[1])) {
-                    $limit = $arr[0];
-                }else {
-                    $start = $arr[0];
-                    $limit = $arr[1];
+            if($pos_limit = strpos($reSql, 'limit')){
+                $sql = substr($sql, 0, $pos_limit + $pos_space1); //limit之后的去掉
+                $limit_str = trim(substr($reSql, $pos_limit+6));
+                if($pos_quote = strpos($limit_str, ',')){
+                    $tArr = explode(',', $limit_str);
+                    $start = intval($tArr[0]);
+                    $limit = intval($tArr[1]);
+                }else{
+                    $limit = intval($limit_str);
                 }
             }
-            $sqlmax = preg_replace("/limit.*?,.*?[0-9]+/si","",$sql);  //max表示该sql语句查询出的最大行数
-            $sqlmax = preg_replace("/trim\(.*?\)/si", "", $sqlmax, 1);
-            $sqlmax = preg_replace("/select.*?\sfrom\s/si","Select Count(*) as count From ",$sqlmax,1);
-            $rsmax = $this->getOne($sqlmax);
+            $pos_from = strpos($reSql, 'from'); //pos_from在reSql中的位置刚好是要替换的长度
+            $sql = substr_replace($sql, ' count(*) as cnt ', $pos_space1, $pos_from+1);
+            $rsmax = $this->getOne($sql);
             if(!$rsmax)return 0;
-            $max = $rsmax['count'];    //查询出该语句最大行数      
+            $max = floatval($rsmax['cnt']); //查询出该语句最大行数      
             // preg_match_all("/limit.*?([0-9]+).*?,.*?([0-9]+)/si",$sql,$cntArr);//找出limit后的两个数字
             $max = $max-$start;
             $nRows = ($max>$limit)?$limit:$max;//如果limit后的个数比最大行要小则采用limit后的那个数
