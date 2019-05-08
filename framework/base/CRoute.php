@@ -362,27 +362,52 @@ abstract class CRoute extends CEle {
         }
         return $locArr;
     }
-    function getRequest($prefix='/')
+    function getRequest($prefix='/', &$ouri=null, &$huri=null)
     {
         if(is_object($this->request)){
-            $uri = &$this->request->server['request_uri'];
+            $ouri = &$this->request->server['request_uri'];
         }else{
-            $uri = isset($_SERVER['REQUEST_URI'])?$_SERVER['REQUEST_URI']:'';
+            $ouri = isset($_SERVER['REQUEST_URI'])?$_SERVER['REQUEST_URI']:'';
         }
-        if($uri){
-            while(strpos($uri, '//')){
-                $uri = str_replace('//', '/', $uri);
+        if($ouri){
+            while(false !== strpos($ouri, '//')){
+                $ouri = str_replace('//', '/', $ouri);
             }
         }
-        return $prefix.trim(trim($uri), '/');
+        $huri = $ouri;
+        if($pq = strpos($ouri, '?')){
+            $huri = substr($ouri, 0, $pq);
+        }
+        return $prefix.trim(trim($ouri), '/');
     }
     function getUri($prefix='/')
     {
         return $this->getRequest($prefix);
     }
+    function getOUri()
+    {
+        $this->getRequest(null, $ouri);
+        return $ouri;
+    }
+    function getHUri()
+    {
+        $this->getRequest(null, $ouri, $huri);
+        return $huri;
+    }
     function getRequestUri($prefix='/')
     {
         return $this->getUri($prefix);
+    }
+    /*
+    * desc: 检查是否有冗余url路径
+    *
+    */
+    function isRedUri()
+    {
+        if($this->action === substr($this->getHUri(), 0-strlen($this->action))){
+            return false;
+        }
+        return true;
     }
 
     public function AliasRoute($uri, &$alias, &$suffix=null, $level=0)
