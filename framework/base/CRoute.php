@@ -402,7 +402,7 @@ abstract class CRoute extends CEle {
     * desc: 检查是否有冗余url路径
     *
     */
-    function isRedUri()
+    function hasRedUri()
     {
         if($this->action === substr($this->getHUri(), 0-strlen($this->action))){
             return false;
