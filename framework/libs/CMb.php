@@ -183,39 +183,17 @@ class CMb {
         $strsorter = $len1>$len2?$str2:$str1; //较短的一个字符串
         $lenlonger = $len1>$len2?$len1:$len2; //较长的一个字符串的长度
         $lensorter = $len1>$len2?$len2:$len1; 
-        //echo "$strlonger ----- $strsorter<br/><br/><br/>";
-        /*
-        $matchtimes = 0; //匹配次数
-        $offsetlonger = 0;
-        for($i=0; $i<=$lensorter-1; $i++) {
-            $word = self::mbSub($strsorter, 1, $i);
-            $pos  = self::mbPos($strlonger, $word, $offsetlonger);
-            if($pos>0 || 0===$pos) {
-                $matchtimes++;
-                $offsetlonger = $pos;
-            }
-        }*/
+        // echo "$strlonger ----- $strsorter \n";
+        // mb_split(pattern, string)
+
         $matchtimes = self::getMatchTimes($strsorter, $strlonger);
+        // echo "matchtimes:{$matchtimes}\n";
+
         // echo "($matchtimes)*100/(($lenlonger+$lensorter)/2)\n";
         $appx = ($matchtimes)*100/(($lenlonger+$lensorter)/2);
         $appx = round($appx, 2);
-        // echo "$appx,$appx%";
-        if($appx >= 100){
-            $t = intval($lenlonger/$lensorter);
-            $t = $t>=99?99:$t;
-            if($t >= 2){
-                $appx -= $t;
-            }
-        }
-        
-        //str1在str2的中间
-        if(strpos($str2, $str1)>1 && strpos($str2, $str1)+strlen($str1)< strlen($str2)) {
-            return $appx>40?$appx-15:$appx;
-        }
-        //str2在str1的中间
-        if(strpos($str1, $str2)>1 && strpos($str1, $str2)+strlen($str2)< strlen($str1)) {
-            return $appx>40?$appx-15:$appx;
-        }
+        // echo "appx=$appx%";
+
         return $appx;
     }
 
@@ -267,19 +245,29 @@ class CMb {
     * 中华人民共和国中国人民解放军
     * 说明: 此算法的前提是str1比str2短
     */
+    static function mb_str_split( $str )
+    { 
+        return preg_split('/(?<!^)(?!$)/u', $str);
+    } 
+
+
     static function getMatchTimes($str1='', $str2='')
     {
         $matchtimes = 0;
         $len1 = self::mbLen($str1);
         $len2 = self::mbLen($str2);
         $str0 = $str2;
-        for($i=0; $i<$len1; $i++){
-            $char = self::mbSub($str1, 1, $i);//当前字符
-            $pos  = self::mbPos($str0, $char);
-            $matchtimes += (false !== $pos)?1:0;
-            $str0 = self::mbSub($str0, null, $pos+1);
-            // echo "$pos1, $pos2, $str0($matchtimes)\n";
-            if(strlen($str0) <= 0) break;
+
+        $tArr1 = self::mb_str_split($str1);
+        $tArr2 = self::mb_str_split($str2);
+        
+        foreach($tArr1 as $signle){
+            $index = array_search($signle, $tArr2);
+            if(is_numeric($index)) {
+                $matchtimes++;
+                $tArr2 = array_slice($tArr2, $index+1);
+            }
+            // var_dump($index);
         }
         return $matchtimes;
     }

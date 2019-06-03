@@ -76,7 +76,7 @@ class CTool {
             }
         }
         if($prex && is_string($prex)){
-            $id .= $prex;
+            $id = $prex.$id;
         }
         return $id;
     }
