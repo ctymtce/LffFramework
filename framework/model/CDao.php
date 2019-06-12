@@ -319,14 +319,18 @@ class CDao extends CEle{
             if(isset($exArr['alias'])){
                 parse_str($exArr['alias'], $aliasArr);
                 if(is_array($aliasArr)){
-                    foreach($aliasArr as $alias_filed=>$real_field){
+                    foreach($aliasArr as $alias_filed=>$real_field_val){
+                        //real_field_val可能是一常数
                         foreach($rowArr as &$r0002){
-                            if(!isset($r0002[$real_field]))break;
-                            $alias_value = $r0002[$real_field];
-                            $this->arrayInsert($r0002, $real_field, array(
-                                    $alias_filed => $alias_value
-                                )
-                            );
+                            if(isset($r0002[$real_field_val])){
+                                $alias_value = $r0002[$real_field_val];
+                                $this->arrayInsert($r0002, $real_field_val, array(
+                                        $alias_filed => $alias_value
+                                    )
+                                );
+                            }else{//常数
+                                $r0002[$alias_filed] = $real_field_val;
+                            }
                         }
                     }
                 }
