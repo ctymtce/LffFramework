@@ -350,6 +350,7 @@ abstract class CEle {
         $subkeys = array_flip(explode(',', str_replace(array(' '),'',$subkeys)));
         // $this->dump($rowArr);
         foreach($rowArr as &$rr){
+            if(!isset($rr[$kL])) continue;
             if(isset($subArr[$rr[$kL]])){
                 $subsubArr = array_intersect_key($subArr[$rr[$kL]], $subkeys);
                 if($prefix){
@@ -445,17 +446,24 @@ abstract class CEle {
     *@excludekey --- bool it decides wheather override the same keys 
     *
     */
-    public function flattingArray($array, $excludekey=true)
+    public function flattingArray($array, $excludekey=true, $isindex=false)
     {
-        foreach($array as $k=>$r0001){
-            if(is_array($r0001)){
-                unset($array[$k]);
-                if($excludekey){
-                    $r0001 = array_diff_key($r0001, $array);
+        if($isindex){
+            $result = array_reduce($array, function ($result, $value) {
+                return array_merge($result, array_values($value));
+            }, array());
+            return $result;
+        }else{
+            foreach($array as $k=>$r0001){
+                if(is_array($r0001)){
+                    unset($array[$k]);
+                    if($excludekey){
+                        $r0001 = array_diff_key($r0001, $array);
+                    }
+                    $array = array_merge($array, $this->flattingArray($r0001,$excludekey,$isindex));
                 }
-                $array = array_merge($array, self::flattingArray($r0001));
             }
+            return $array;
         }
-        return $array;
     }
 };
