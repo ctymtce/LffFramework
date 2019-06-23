@@ -476,6 +476,7 @@ abstract class CEle {
     */
     public function ArraySearcher($need, $sArr)
     {
+        if(!is_array($sArr))return null;
         if(!function_exists('inner_searcher')){
             function inner_searcher($need, $sArr, &$foundKeys){
                 foreach($sArr as $k => $vals){
