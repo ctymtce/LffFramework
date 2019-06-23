@@ -497,7 +497,12 @@ abstract class CEle {
         }
         $top = inner_searcher($need, $sArr, $foundKeys);
         if(null !== $top) {
-            $foundKeys = array_merge(array($top), $foundKeys);
+            if($foundKeys){
+                array_push($foundKeys, $top);
+                $foundKeys = array_reverse($foundKeys);
+            }else{
+                $foundKeys = array($top);
+            }
         }
         return $foundKeys;
     }
