@@ -466,4 +466,39 @@ abstract class CEle {
             return $array;
         }
     }
+    /*
+    * desc: similar to array_search
+    *
+    *@need  --- mix to be searched value
+    *@array --- arr to be searched array
+    *
+    *return array or null
+    */
+    public function ArraySearcher($need, $sArr)
+    {
+        if(!function_exists('inner_searcher')){
+            function inner_searcher($need, $sArr, &$foundKeys){
+                foreach($sArr as $k => $vals){
+                    // echo str_repeat('    ', $deep)."$k \n";
+                    if(is_array($vals)){
+                        $found = inner_searcher($need, $vals, $foundKeys);
+                        if(null !== $found) {
+                            $foundKeys[] = $found;
+                            return $k;
+                        }
+                    }else{
+                        if($vals == $need){
+                            return $k;
+                        }
+                    }
+                }
+                return null;
+            }
+        }
+        $top = inner_searcher($need, $sArr, $foundKeys);
+        if(null !== $top) {
+            $foundKeys = array_merge(array($top), $foundKeys);
+        }
+        return $foundKeys;
+    }
 };
