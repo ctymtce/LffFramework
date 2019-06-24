@@ -474,7 +474,7 @@ abstract class CEle {
     *
     *return array or null
     */
-    public function ArraySearcher($need, $sArr)
+    public function findsArray($need, $sArr)
     {
         if(!is_array($sArr))return null;
         if(!function_exists('inner_searcher')){
