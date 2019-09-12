@@ -255,28 +255,6 @@ class CTool {
         return $plain;
     }
 
-    /**
-    * 取得离val最近的,比val大的且能被10或100...整除的那个数
-    * @param int $val
-    * @param bool $isfive,表示是否以50为模(eg.
-    *  (50,100,150...)
-    */
-    static function UpTrimUnit($val, $isfive=TRUE)
-    {
-        //取得离val最近的,比val大的且能被10或100...整除的那个数
-        $len = strlen(ceil($val));
-        $val = ceil($val/(pow(10,$len-1))) * pow(10,$len-1);
-        $val = ($val < 10)?10:$val;
-        if($isfive) {
-            $fiveMod = 5*pow(10,$len-1);
-            //echo "fiveMod:$fiveMod($len,$val); <br/>";
-            if($val%$fiveMod > 0){
-                $val = $val + ($fiveMod - ($val%$fiveMod));
-            }
-        }
-        return $val;
-    }
-
     static function RemoveSlashes($str)
     {
         do{

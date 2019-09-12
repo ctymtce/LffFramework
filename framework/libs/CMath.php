@@ -46,4 +46,66 @@ class CMath {
         $int = ceil($val/$mul) * $mul;
         return max($int, $min);
     }
+    /**
+    * 取得离val最近的,比val大的且能被10或100...整除的那个数
+    * @param int $val
+    * @param bool $isfive,表示是否以50为模(eg.
+    *  (50,100,150...)
+    */
+    static function UpTrimUnit($val, $isfive=true)
+    {
+        //取得离val最近的,比val大的且能被10或100...整除的那个数
+        $len = strlen(ceil($val));
+        $val = ceil($val/(pow(10,$len-1))) * pow(10,$len-1);
+        $val = ($val < 10)?10:$val;
+        if($isfive) {
+            $fiveMod = 5*pow(10,$len-1);
+            //echo "fiveMod:$fiveMod($len,$val); <br/>";
+            if($val%$fiveMod > 0){
+                $val = $val + ($fiveMod - ($val%$fiveMod));
+            }
+        }
+        return $val;
+    }
+    static function DownTrimUnit($val, $isfive=true)
+    {
+        //取得离val最近的,比val小的且能被10或100...整除的那个数
+        $len = strlen(ceil($val));
+        $high = $val/(pow(10,$len-1)); //[1,10]
+        $high = floor($high);
+        if($isfive){
+            $high -= $high%5 ;
+            $high = max(1, $high);
+        }
+        $val = $high * pow(10,$len-1);
+        return ($val < 10)?10:$val;
+    }
+    /**
+    * 将一个数人性化切分成多个数字
+    * eg: 1000->array(300,300,400)
+    * @param int $val,被切分的数
+    * @param int $num,切分成个数
+    *
+    *return array
+    */
+    static function HumanizeSplit($val, $num=3, $sorter=1, $index=0)
+    {
+        $val = floatval($val);
+        $avg = $val / $num;
+
+        $hAvg = self::DownTrimUnit($avg,false);
+        $splits = array_fill($index, $num-1, $hAvg);
+        $splits[] = $val - array_sum($splits);
+
+        if(-1 == $sorter){
+            rsort($splits); //倒序
+            $tArr = $splits;
+            $splits = array();
+            foreach($tArr as $v){//保持索引
+                $splits[$index++] = $v;
+            }
+        }
+
+        return $splits;
+    }
 };
