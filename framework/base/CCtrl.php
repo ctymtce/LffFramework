@@ -70,7 +70,7 @@ abstract class CCtrl extends CEle {
         if(null === $this->smarty) {
             $App = $this->getCaller();
             $tpl_base_dir = $App->TPL_UI;
-            $tpl_cpl_dir  = $App->getConfig('scpdir');
+            $tpl_cpl_dir  = $App->getConfig('tcpdir');
             $this->smarty = new CSmarty($tpl_base_dir, $tpl_cpl_dir);
             /*$configArr = $App->getConfig();
             foreach($configArr as $_k => $_v){
