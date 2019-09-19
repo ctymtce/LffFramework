@@ -8,6 +8,24 @@ function smarty_modifier_humanizedate($time, $showzero=false)
 {
     $now  = time();
     $secs = $now-$time;
+    if($secs < 0) {
+        $secs = abs($secs);
+        $days = floor($secs/86400);
+        if($days > 0) $secs -= $days*86400;
+
+        $hours = floor($secs/3600);
+        if($hours > 0) $secs -= $hours*3600;
+
+        $mins = floor($secs/60);
+        if($mins > 0) $secs -= $mins*60;
+
+        $htime = "{$secs}秒";
+        if($mins  > 0) $htime = "{$mins}分".$htime;
+        if($hours > 0) $htime = "{$hours}小时".$htime;
+        if($days  > 0) $htime = "{$days}天".$htime;
+
+        return $htime;
+    }
     if(!$showzero && $time < 10)return '';
     $days = (strtotime(date("Y-m-d 23:59:59")) - $time)/86400; //计算天只能按当前的最后一刻来计算
     // var_dump($days);

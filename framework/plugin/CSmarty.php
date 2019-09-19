@@ -8,16 +8,21 @@ class CSmarty {
     
     private $smarty = null;
     private $tpldir = '.';
+    private $cpldir = null;
     
-    public function __construct($tpl_base_dir='.')
+    public function __construct($tpl_base_dir='.', $tpl_cpl_dir=null)
     {
         $this->tpldir = $tpl_base_dir;
+        $this->cpldir = $tpl_cpl_dir;
     }
 
     public function getSmarty()
     {
         if(null === $this->smarty) {
             $this->smarty = new Smarty($this->tpldir);
+            if($this->cpldir){
+                $this->smarty->setCompileDir($this->cpldir);
+            }
         }
         return $this->smarty;
     }

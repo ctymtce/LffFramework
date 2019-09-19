@@ -70,14 +70,15 @@ abstract class CCtrl extends CEle {
         if(null === $this->smarty) {
             $App = $this->getCaller();
             $tpl_base_dir = $App->TPL_UI;
-            $this->smarty = new CSmarty($tpl_base_dir);
-            $configArr = $App->getConfig();
+            $tpl_cpl_dir  = $App->getConfig('scpdir');
+            $this->smarty = new CSmarty($tpl_base_dir, $tpl_cpl_dir);
+            /*$configArr = $App->getConfig();
             foreach($configArr as $_k => $_v){
                 $ascii = ord($_k);
                 if($ascii >= 65 && $ascii <= 90){
                     $this->smarty->assign($_k,  $_v);
                 }
-            }
+            }*/
             $this->smarty->assign('HOME',       $App->home);
             $this->smarty->assign('ROOT',       $App->boot);
             $this->smarty->assign('BOOT',       $App->boot);
