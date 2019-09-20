@@ -81,6 +81,7 @@ class CApp extends CRoute {
         $session   = $this->getSession();
         $this->cleanBuffer();
         $options = $this->getConfig('session_options');
+        $options['domain'] = $this->getConfig('domain');
         if(!is_array($options)) $options = array();
         $options['cgimode'] = $this->cgimode;
         $session->options($options);

@@ -206,9 +206,53 @@ abstract class CRoute extends CEle {
     *@dirName --- string(dir1/dir2/...)
     *return: ...com/dir1/dir2/...
     */
-    public function getUrl($dir)
+    public function getUrl($dir=null)
     {
-        return rtrim($this->home.'/'.ltrim($dir,'/'), '/');
+        if($dir){
+            return rtrim($this->home.'/'.ltrim($dir,'/'), '/');
+        }else{
+            return $this->home . $this->getUri();
+        }
+    }
+    /*
+    * desc: url替换
+    *   eg: http://guopeikaoshi.demo.com/a?r=1
+    *   ->: http://www.demo.com/a?r=1
+    *@url --- str 是一完整的url
+    *@domain --- str 二级域名的前辍
+    *@modifies --- arr 要修改的url项(scheme,host,port,user,pass,path,query,fragment)
+    *return: string(new url)
+    */
+    public function urlTo($url, $domain=null, $modifies=array())
+    {
+        if(strlen($url) < 5) return $url;
+        if(strpos($url, $domain.'.'))return $url;
+        $tArr = parse_url($url);
+
+        if($domain && isset($tArr['host'])){
+            $sArr = explode('.', $tArr['host']);
+            if(count($sArr) > 2){
+                $sArr[0] = $domain;
+            }else{
+                array_unshift($sArr, $domain);
+            }
+            $tArr['host'] = implode('.', $sArr);
+        }
+
+        if($modifies){
+            $tArr = array_merge($tArr, $modifies);
+        }
+
+        $turl = isset($tArr['scheme'])?$tArr['scheme'].'://':'';
+        if(isset($tArr['user']) && isset($tArr['pass'])){
+            $turl .= $tArr['user'].':'.$tArr['pass'].'@';
+        }
+        $turl .= $tArr['host'];
+        if(isset($tArr['path']))$turl   .= $tArr['path'];
+        if(isset($tArr['query']))$turl   .= '?'.$tArr['query'];
+        if(isset($tArr['fragment']))$turl .= '#'.$tArr['fragment'];
+
+        return $turl;
     }
     /*
     * 获取primary下某目录的本地地址，如：_uploads /../primary/_uploads
@@ -259,7 +303,7 @@ abstract class CRoute extends CEle {
     *@paraArr --- string url parameters
     * reutrn: url;
     */
-    public function makeUrl($route=null, $paraArr=array(), $prex=null, $defaction='entry')
+    public function makeUrl($route=null, $paraArr=array(), $prex=null)
     {
         $port = $this->port();
         if(strpos($route, '?')){
@@ -272,7 +316,7 @@ abstract class CRoute extends CEle {
         }
         if(0 === strpos($route,'http://') || 0 === strpos($route,'https://')){
             $uArr = parse_url($route);
-            $prex  = $uArr['scheme'].'://'.$uArr['host'];
+            $prex = $uArr['scheme'].'://'.$uArr['host'];
             if(isset($uArr['port'])){
                 $port = $uArr['port'];
             }

@@ -140,7 +140,7 @@ class CSession extends CEle{
     {
         $sptime = time(); //以当前时间为id
         $expire = $sptime+$this->_expire();
-        return date('YmdHis',$expire).md5(uniqid(mt_rand(100000,999999),true)).$this->suffix;
+        return date('YmdHis',$sptime).md5(uniqid(mt_rand(100000,999999),true)).$this->suffix;
     }
     private function _expire()
     {
@@ -195,24 +195,28 @@ class CSession extends CEle{
         $cookie = $this->cookie;
 
         $prev_expire = substr($previd, 0, 14);
-        if(strtotime($prev_expire)-time() > 10800){//3hours
+        $prev_expireAt = strtotime($prev_expire)+$this->_expire();
+        if($prev_expireAt-time() > $this->postpone){//postpone:int(seconds)
+            // var_dump($prev_expireAt-time());
             return $previd;
         }
 
-        $expire = date('YmdHis', time()+$this->_expire());
+        $cdtime = date('YmdHis', time());
+        $expireAt = time()+$this->_expire();
 
-        $willid = $expire.substr($previd, 14);
+        $willid = $cdtime.substr($previd, 14);
         $prev_file = $this->_get_file($previd);
         $will_file = $this->_get_file($willid);
+        
         if(rename($prev_file, $will_file)){
             if($request && $response){
                 $request->cookie[$cookie] = $willid;
                 $response->cookie($cookie, $willid, 0, '/', $this->domain);//clean
-                $response->cookie($cookie, $willid, strtotime($expire), '/', $this->domain);
+                $response->cookie($cookie, $willid, $expireAt+604800, '/', $this->domain);
             }else{
                 $_COOKIE[$cookie] = $willid;
                 setCookie($cookie, $willid, 0, '/', $this->domain); //clean
-                setCookie($cookie, $willid, strtotime($expire), '/', $this->domain);
+                setCookie($cookie, $willid, $expireAt+604800, '/', $this->domain);
             }
         }
         return $willid;
@@ -231,7 +235,7 @@ class CSession extends CEle{
 
         if(is_object($request) && is_object($response)){ //SWOOLE MODE
             if(isset($request->cookie[$cookie])){
-                if(strtotime(substr($request->cookie[$cookie],0,14)) < time()){
+                if(strtotime(substr($request->cookie[$cookie],0,14))+$this->_expire() < time()){
                     $file = $this->_get_file($request->cookie[$cookie]);
                     if(is_file($file))@unlink($file);
                     unset($request->cookie[$cookie]);
@@ -242,15 +246,15 @@ class CSession extends CEle{
                 return $this->postpone($request->cookie[$cookie], $request, $response);
                 // return $request->cookie[$cookie];
             }else{
-                $sidVal = $this->_mk_sid($expire);
-                $request->cookie[$cookie] = $sidVal;
-                // $response->cookie($cookie, $sidVal, 0, '/', $this->domain);//clean
-                $response->cookie($cookie, $sidVal, $expire+604800, '/', $this->domain);
-                return $sidVal;
+                $sessId = $this->_mk_sid($expireAt);
+                $request->cookie[$cookie] = $sessId;
+                // $response->cookie($cookie, $sessId, 0, '/', $this->domain);//clean
+                $response->cookie($cookie, $sessId, $expireAt+604800, '/', $this->domain);
+                return $sessId;
             }
         }else{//FPM MODE
             if(isset($_COOKIE[$cookie])){
-                if(strtotime(substr($_COOKIE[$cookie],0,14)) < time()){
+                if(strtotime(substr($_COOKIE[$cookie],0,14))+$this->_expire() < time()){
                     $file = $this->_get_file($_COOKIE[$cookie]);
                     if(is_file($file))@unlink($file);
                     unset($_COOKIE[$cookie]);
@@ -261,11 +265,11 @@ class CSession extends CEle{
                 return $this->postpone($_COOKIE[$cookie]);
                 // return $_COOKIE[$cookie];
             }else{
-                $sidVal = $this->_mk_sid($expire);
-                $_COOKIE[$cookie] = $sidVal;
-                // setCookie($cookie, $sidVal, 0, '/', $this->domain); //clean
-                setCookie($cookie, $sidVal, $expire+604800, '/', $this->domain); //client neednt expire
-                return $sidVal;
+                $sessId = $this->_mk_sid($expireAt);
+                $_COOKIE[$cookie] = $sessId;
+                // setCookie($cookie, $sessId, 0, '/', $this->domain); //clean
+                setCookie($cookie, $sessId, $expireAt+604800, '/', $this->domain); //client neednt expire
+                return $sessId;
             }
         }
     }
