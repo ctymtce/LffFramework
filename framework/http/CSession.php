@@ -2,14 +2,15 @@
 class CSession extends CEle{
     protected $cgimode = 1;
     
-    private $domain  = null;
-    private $expire  = 0;
-    private $cookie  = 'PHPSESSEX';
-    private $folder  = '/tmp/sessions';
-    private $prefix  = 'PHPS_';
-    private $suffix  = '';
-    private $enable  = true;
-    private $_is_gc  = 0;
+    private $domain   = null;
+    private $expire   = 0;
+    private $cookie   = 'PHPSESSEX';
+    private $folder   = '/tmp/sessions';
+    private $prefix   = 'PHPS_';
+    private $suffix   = '';
+    private $enable   = true;
+    private $postpone = 0;
+    private $_is_gc   = 0;
 
     public function options($options=array()){
         if(!is_array($options))return;
@@ -29,7 +30,16 @@ class CSession extends CEle{
             $this->cookie = $options['session_cookie'];
         }
         if(isset($options['session_domain'])){
-            $this->domain = $options['session_domain'];
+            if('domain' == $options['session_domain']){
+                if(isset($options['domain'])){
+                    $this->domain = $options['domain'];
+                }
+            }else{
+                $this->domain = $options['session_domain'];
+            }
+        }
+        if(isset($options['session_postpone'])){
+            $this->postpone = $options['session_postpone'];
         }
         if(isset($options['session_expire'])){
             $this->expire = $options['session_expire'];
@@ -126,6 +136,16 @@ class CSession extends CEle{
     {
         return $this->folder.'/'.$this->prefix.$sessId;
     }
+    private function _mk_sid(&$expire=0)
+    {
+        $sptime = time(); //以当前时间为id
+        $expire = $sptime+$this->_expire();
+        return date('YmdHis',$expire).md5(uniqid(mt_rand(100000,999999),true)).$this->suffix;
+    }
+    private function _expire()
+    {
+        return $this->expire > 0 ? $this->expire : 86400;
+    }
     /*
     * desc: 销毁session
     *
@@ -164,7 +184,39 @@ class CSession extends CEle{
         }
         return closedir($handler);
     }
+    /*
+    * desc: cookie延期
+    *
+    */
+    function postpone($previd, $request=null, $response=null)
+    {
+        if($this->postpone <= 0) return $previd;
+        
+        $cookie = $this->cookie;
 
+        $prev_expire = substr($previd, 0, 14);
+        if(strtotime($prev_expire)-time() > 10800){//3hours
+            return $previd;
+        }
+
+        $expire = date('YmdHis', time()+$this->_expire());
+
+        $willid = $expire.substr($previd, 14);
+        $prev_file = $this->_get_file($previd);
+        $will_file = $this->_get_file($willid);
+        if(rename($prev_file, $will_file)){
+            if($request && $response){
+                $request->cookie[$cookie] = $willid;
+                $response->cookie($cookie, $willid, 0, '/', $this->domain);//clean
+                $response->cookie($cookie, $willid, strtotime($expire), '/', $this->domain);
+            }else{
+                $_COOKIE[$cookie] = $willid;
+                setCookie($cookie, $willid, 0, '/', $this->domain); //clean
+                setCookie($cookie, $willid, strtotime($expire), '/', $this->domain);
+            }
+        }
+        return $willid;
+    }
     /*
     * desc: 获取或生成cookie id
     *
@@ -178,38 +230,42 @@ class CSession extends CEle{
         $response = $this->getResponding();
 
         if(is_object($request) && is_object($response)){ //SWOOLE MODE
-            if(isset($request->cookie[$cookie]) && $this->expire>0){
-                if(strtotime(substr($request->cookie[$cookie],0,14))+$this->expire < time()){
+            if(isset($request->cookie[$cookie])){
+                if(strtotime(substr($request->cookie[$cookie],0,14)) < time()){
                     $file = $this->_get_file($request->cookie[$cookie]);
                     if(is_file($file))@unlink($file);
                     unset($request->cookie[$cookie]);
+                    $response->cookie($cookie, $request->cookie[$cookie], 0, '/', $this->domain);
                 }
             }
             if(isset($request->cookie[$cookie])){//TMPSESSID
-                return $request->cookie[$cookie];
+                return $this->postpone($request->cookie[$cookie], $request, $response);
+                // return $request->cookie[$cookie];
             }else{
-                $sid  = date('YmdHis').md5(uniqid(mt_rand(100000,999999),true)).$this->suffix;
-                $expire = $this->expire > 0 ? time()+$this->expire+2592000 : 0;
-                $request->cookie[$cookie] = $sid;
-                $response->cookie($cookie, $sid, $expire, '/', $this->domain);//a month
-                return $sid;
+                $sidVal = $this->_mk_sid($expire);
+                $request->cookie[$cookie] = $sidVal;
+                // $response->cookie($cookie, $sidVal, 0, '/', $this->domain);//clean
+                $response->cookie($cookie, $sidVal, $expire+604800, '/', $this->domain);
+                return $sidVal;
             }
         }else{//FPM MODE
-            if(isset($_COOKIE[$cookie]) && $this->expire>0){
-                if(strtotime(substr($_COOKIE[$cookie],0,14))+$this->expire < time()){
+            if(isset($_COOKIE[$cookie])){
+                if(strtotime(substr($_COOKIE[$cookie],0,14)) < time()){
                     $file = $this->_get_file($_COOKIE[$cookie]);
                     if(is_file($file))@unlink($file);
                     unset($_COOKIE[$cookie]);
+                    setCookie($cookie, $_COOKIE[$cookie], 0, '/', $this->domain);
                 }
             }
             if(isset($_COOKIE[$cookie])){//TMPSESSID
-                return $_COOKIE[$cookie];
+                return $this->postpone($_COOKIE[$cookie]);
+                // return $_COOKIE[$cookie];
             }else{
-                $sid  = date('YmdHis').md5(uniqid(mt_rand(100000,999999),true)).$this->suffix;
-                $expire = $this->expire > 0 ? time()+$this->expire+2592000 : 0;
-                $_COOKIE[$cookie] = $sid;
-                setCookie($cookie, $sid, $expire, '/', $this->domain); //client neednt expire
-                return $sid;
+                $sidVal = $this->_mk_sid($expire);
+                $_COOKIE[$cookie] = $sidVal;
+                // setCookie($cookie, $sidVal, 0, '/', $this->domain); //clean
+                setCookie($cookie, $sidVal, $expire+604800, '/', $this->domain); //client neednt expire
+                return $sidVal;
             }
         }
     }
