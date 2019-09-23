@@ -1,7 +1,6 @@
 <?php
 class CSession extends CEle{
-    protected $cgimode = 1;
-    
+
     private $domain   = null;
     private $expire   = 0;
     private $cookie   = 'PHPSESSEX';
@@ -9,8 +8,9 @@ class CSession extends CEle{
     private $prefix   = 'PHPS_';
     private $suffix   = '';
     private $enable   = true;
-    private $postpone = 0;
     private $_is_gc   = 0;
+    private $CgiMode  = 1;
+    private $postpone = 0;
 
     public function options($options=array()){
         if(!is_array($options))return;
@@ -44,8 +44,8 @@ class CSession extends CEle{
         if(isset($options['session_expire'])){
             $this->expire = $options['session_expire'];
         }
-        if(isset($options['cgimode'])){
-            $this->cgimode = $options['cgimode'];
+        if(isset($options['CgiMode'])){
+            $this->CgiMode = $options['CgiMode'];
         }
     }
     public function disabled()
@@ -79,7 +79,7 @@ class CSession extends CEle{
 
         if($this->_is_gc > 0){//是否回收
             if(mt_rand(1,100) <= $this->_is_gc){//回收概率
-                if(2 == $this->cgimode){
+                if(2 == $this->CgiMode){
                     swoole_timer_after(1, array($this,'gc'));
                 }else{
                     $this->gc();//清理
@@ -126,7 +126,7 @@ class CSession extends CEle{
         if(!$this->enable) return false;
         return file_put_contents($this->_get_file($sessId), json_encode($data));
         /*$file = $this->_get_file($sessId);
-        if(2 == $this->cgimode && is_file($file)){
+        if(2 == $this->CgiMode && is_file($file)){
             return Swoole_Async_writeFile($file, json_encode($data));
         }else{
             return file_put_contents($file, json_encode($data));
@@ -209,10 +209,10 @@ class CSession extends CEle{
         $will_file = $this->_get_file($willid);
         
         if(rename($prev_file, $will_file)){
-            if($request && $response){
+            if(isset($this->request) && isset($this->response) && $this->request && $this->response){
                 $request->cookie[$cookie] = $willid;
-                $response->cookie($cookie, $willid, 0, '/', $this->domain);//clean
-                $response->cookie($cookie, $willid, $expireAt+604800, '/', $this->domain);
+                $this->cookie($cookie, $willid, 0, '/', $this->domain);//clean
+                $this->cookie($cookie, $willid, $expireAt+604800, '/', $this->domain);
             }else{
                 $_COOKIE[$cookie] = $willid;
                 setCookie($cookie, $willid, 0, '/', $this->domain); //clean
@@ -230,10 +230,9 @@ class CSession extends CEle{
         if(!$this->enable) return false;
         $cookie   = $this->cookie;
 
-        $request  = $this->getRequesting();
-        $response = $this->getResponding();
-
-        if(is_object($request) && is_object($response)){ //SWOOLE MODE
+        if(2 == $this->CgiMode && (is_object($request=$this->getRequesting()) && is_object($response=$this->getResponding()))){ //SWOOLE MODE
+            $this->request  = $request;
+            $this->response = $response;
             if(isset($request->cookie[$cookie])){
                 if(strtotime(substr($request->cookie[$cookie],0,14))+$this->_expire() < time()){
                     $file = $this->_get_file($request->cookie[$cookie]);
@@ -243,7 +242,7 @@ class CSession extends CEle{
                 }
             }
             if(isset($request->cookie[$cookie])){//TMPSESSID
-                return $this->postpone($request->cookie[$cookie], $request, $response);
+                return $this->postpone($request->cookie[$cookie]);
                 // return $request->cookie[$cookie];
             }else{
                 $sessId = $this->_mk_sid($expireAt);

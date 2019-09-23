@@ -9,7 +9,7 @@
 
 class CApp extends CRoute {
 
-    protected $cgimode  = 1; //1:FPM,2:SWOOLE
+    protected $CgiMode  = 1; //1:FPM,2:SWOOLE
     protected $request  = null;
     protected $response = null;
 
@@ -50,7 +50,7 @@ class CApp extends CRoute {
     }
     public function Event($request, $response, $extras=array(), $params=null)
     {
-        $this->cgimode  = 2;
+        $this->CgiMode  = 2;
         $this->request  = $request;
         $this->response = $response;
         return $this->Run(null, $params, $extras);
@@ -83,7 +83,7 @@ class CApp extends CRoute {
         $options = $this->getConfig('session_options');
         $options['domain'] = $this->getConfig('domain');
         if(!is_array($options)) $options = array();
-        $options['cgimode'] = $this->cgimode;
+        $options['CgiMode'] = $this->CgiMode;
         $session->options($options);
         $session->start();
     }
