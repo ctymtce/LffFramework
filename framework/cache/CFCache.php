@@ -20,7 +20,7 @@ class CFcache {
         $id = self::mkId($id);
         $cacheFile = self::getFile($id, $group);
         $jVal = json_encode(array($val));
-        if(class_exists('Cgi',0) && 2==Cgi::Mode){
+        if(class_exists('Cgi',0) && 2==Cgi::CgiMode){
             return Swoole_Async_writeFile($cacheFile, $jVal, function($file)use($expire){
                 chmod($file, 0755);
                 touch($file, time()+$expire);

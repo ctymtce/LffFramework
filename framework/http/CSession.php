@@ -186,6 +186,7 @@ class CSession extends CEle{
     }
     /*
     * desc: cookie延期
+    * call: $this->getSession()->postpone(null,true);
     *
     *@forced --- bool 强制延期
     *
@@ -194,17 +195,31 @@ class CSession extends CEle{
     {
         if(!$forced && $this->postpone <= 0) return $previd;
         
-        $cookie = $this->cookie;
+        $cookie   = $this->cookie;
+        $cdtime   = date('YmdHis', time());
+        $expireAt = time()+$this->_expire();
+
+        if(null === $previd){//auto
+            if(2==$this->CgiMode && isset($this->request) && isset($this->response) && $this->request && $this->response){
+                if(isset($this->request->cookie[$cookie])){
+                    $previd = $this->request->cookie[$cookie];
+                }else{
+                    $previd = $this->_mk_sid($expireAt);
+                }
+            }else{
+                if(isset($_COOKIE[$cookie])){
+                    $previd = $_COOKIE[$cookie];
+                }else{
+                    $previd = $this->_mk_sid($expireAt);
+                }
+            }
+        }
 
         $prev_expire = substr($previd, 0, 14);
         $prev_expireAt = strtotime($prev_expire)+$this->_expire();
         if(!$forced && $prev_expireAt-time() > $this->postpone){//postpone:int(seconds)
-            // var_dump($prev_expireAt-time());
             return $previd;
         }
-
-        $cdtime = date('YmdHis', time());
-        $expireAt = time()+$this->_expire();
 
         $willid = $cdtime.substr($previd, 14);
         $prev_file = $this->_get_file($previd);
