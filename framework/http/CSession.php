@@ -254,8 +254,8 @@ class CSession extends CEle{
                 if(strtotime(substr($request->cookie[$cookie],0,14))+$this->_expire() < time()){
                     $file = $this->_get_file($request->cookie[$cookie]);
                     if(is_file($file))@unlink($file);
-                    unset($request->cookie[$cookie]);
                     $response->cookie($cookie, $request->cookie[$cookie], 0, '/', $this->domain);
+                    unset($request->cookie[$cookie]);
                 }
             }
             if(isset($request->cookie[$cookie])){//TMPSESSID
@@ -273,8 +273,8 @@ class CSession extends CEle{
                 if(strtotime(substr($_COOKIE[$cookie],0,14))+$this->_expire() < time()){
                     $file = $this->_get_file($_COOKIE[$cookie]);
                     if(is_file($file))@unlink($file);
-                    unset($_COOKIE[$cookie]);
                     setCookie($cookie, $_COOKIE[$cookie], 0, '/', $this->domain);
+                    unset($_COOKIE[$cookie]);
                 }
             }
             if(isset($_COOKIE[$cookie])){//TMPSESSID
