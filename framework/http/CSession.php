@@ -124,7 +124,7 @@ class CSession extends CEle{
     public function write($sessId, $data)
     {
         if(!$this->enable) return false;
-        return file_put_contents($this->_get_file($sessId), json_encode($data));
+        return file_put_contents($this->_get_file($sessId), json_encode($data,128));
         /*$file = $this->_get_file($sessId);
         if(2 == $this->CgiMode && is_file($file)){
             return Swoole_Async_writeFile($file, json_encode($data));
