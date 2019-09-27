@@ -97,7 +97,7 @@ class CSession extends CEle{
         }
 
         if(!is_file($file)){
-            $this->write($sessId, array());
+            // $this->write($sessId, array());
         }
         return true;
     }
@@ -272,6 +272,10 @@ class CSession extends CEle{
             if(isset($_COOKIE[$cookie])){
                 if(strtotime(substr($_COOKIE[$cookie],0,14))+$this->_expire() < time()){
                     $file = $this->_get_file($_COOKIE[$cookie]);
+                    //临时log
+                    /*$logs = array('expired===============');
+                    $logs[] = $this->read($_COOKIE[$cookie]);
+                    file_put_contents('/tmp/sessions/z.log', json_encode($logs,128), FILE_APPEND);*/
                     if(is_file($file))@unlink($file);
                     setCookie($cookie, $_COOKIE[$cookie], 0, '/', $this->domain);
                     unset($_COOKIE[$cookie]);
@@ -333,7 +337,8 @@ class CSession extends CEle{
                 $sesses[$kvs] = $val;
             }
         }
-
+        // $sesses['expire'] = $this->_expire();
+        // $sesses['domain'] = $this->domain;
         $ok = $this->write($sessId, $sesses);
         return $ok?$val:false;
     }
