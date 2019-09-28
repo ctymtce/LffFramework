@@ -296,6 +296,44 @@ abstract class CRoute extends CEle {
         }
         return 'primary'==$this->sub?'site':$this->sub;
     }
+    /*
+    * desc: converting url to file path
+    *
+    *@url    --- str eg:http://www.demo.com/assets/static/def.png
+    *@boot   --- str eg:/home/usr/
+    *
+    *return str eg:/home/usr/assets/static/def.png
+    */
+    function url2loc($url, $boot=null)
+    {
+        $tArr = parse_url($url);
+        if(!isset($tArr['path']))return null;
+        $file = $tArr['path'];
+        if(null === $boot){
+            $boot = $this->getLoc();
+        }
+        $file = realpath($boot.$file);
+        return $file;
+    }
+    /*
+    * desc: converting file path to url
+    *
+    *@file   --- str eg:/home/app/assets/static/def.png
+    *@place  --- str eg:/assets
+    *@domain --- str eg:http://www.demo.com
+    *
+    *return str eg:http://www.demo.com/assets/static/def.png
+    */
+    function loc2url($file, $place, $domain=null)
+    {
+        if(null === $domain){
+            $domain = $this->getConfig('home');
+        }
+        if($pos = strpos($file, $place)){
+            $file = substr($file, $pos);
+        }
+        return $domain.$file;
+    }
     /**
     * author: cty@20120326
     *   func: create url
