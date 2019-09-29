@@ -177,7 +177,7 @@ class CSession extends CEle{
             if(is_dir($realpath)){
                 $this->gc($realpath);
             }elseif(0 === strpos($file, 'PHPS_')) {
-                if(strtotime(substr($file,5,14))+$this->expire < time()){
+                if(strtotime(substr($file,5,14))+$this->_expire() < time()){
                     if(is_file($realpath))@unlink($realpath);
                 }
             }
@@ -275,7 +275,7 @@ class CSession extends CEle{
                     //临时log
                     /*$logs = array('expired===============');
                     $logs[] = $this->read($_COOKIE[$cookie]);
-                    file_put_contents('/tmp/sessions/z.log', json_encode($logs,128), FILE_APPEND);*/
+                    file_put_contents('/tmp/sessions/ze.log', json_encode($logs,128), FILE_APPEND);*/
                     if(is_file($file))@unlink($file);
                     setCookie($cookie, $_COOKIE[$cookie], 0, '/', $this->domain);
                     unset($_COOKIE[$cookie]);
