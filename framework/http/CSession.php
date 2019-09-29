@@ -6,7 +6,7 @@ class CSession extends CEle{
     private $cookie   = 'PHPSESSEX';
     private $folder   = '/tmp/sessions';
     private $prefix   = 'PHPS_';
-    private $suffix   = '';
+    private $suffix   = 'cralfcwl';
     private $enable   = true;
     private $_is_gc   = 0;
     private $CgiMode  = 1;
@@ -176,7 +176,8 @@ class CSession extends CEle{
             $realpath = rtrim($dir,'/').'/'.$file;
             if(is_dir($realpath)){
                 $this->gc($realpath);
-            }elseif(0 === strpos($file, 'PHPS_')) {
+            }elseif(0 === strpos($file, 'PHPS_') && strpos($file, $this->suffix)){
+                //the "suffix" is to avoid multiple domains
                 if(strtotime(substr($file,5,14))+$this->_expire() < time()){
                     if(is_file($realpath))@unlink($realpath);
                 }
@@ -272,10 +273,6 @@ class CSession extends CEle{
             if(isset($_COOKIE[$cookie])){
                 if(strtotime(substr($_COOKIE[$cookie],0,14))+$this->_expire() < time()){
                     $file = $this->_get_file($_COOKIE[$cookie]);
-                    //临时log
-                    /*$logs = array('expired===============');
-                    $logs[] = $this->read($_COOKIE[$cookie]);
-                    file_put_contents('/tmp/sessions/ze.log', json_encode($logs,128), FILE_APPEND);*/
                     if(is_file($file))@unlink($file);
                     setCookie($cookie, $_COOKIE[$cookie], 0, '/', $this->domain);
                     unset($_COOKIE[$cookie]);
