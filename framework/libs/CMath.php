@@ -70,6 +70,15 @@ class CMath {
     static function DownTrimUnit($val, $isfive=true)
     {
         //取得离val最近的,比val小的且能被10或100...整除的那个数
+        $val = floatval($val);
+        $mutiple = 1; //放大的倍数
+        if($val < 100){
+            do{
+                $mutiple *= 10;
+                $val *= 10; //放大10,100...倍再计算
+            }while($val < 100);
+        }
+
         $len = strlen(ceil($val));
         $high = $val/(pow(10,$len-1)); //[1,10]
         $high = floor($high);
@@ -78,7 +87,8 @@ class CMath {
             $high = max(1, $high);
         }
         $val = $high * pow(10,$len-1);
-        return ($val < 10)?10:$val;
+        $val = ($val < 10)?10:$val;
+        return $val /= $mutiple;
     }
     /**
     * 将一个数人性化切分成多个数字
@@ -93,7 +103,8 @@ class CMath {
         $val = floatval($val);
         $avg = $val / $num;
 
-        $hAvg = self::DownTrimUnit($avg,false);
+        $hAvg = self::DownTrimUnit($avg, false);
+        // echo "avg=$avg,hAvg=$hAvg\n";
         $splits = array_fill($index, $num-1, $hAvg);
         $splits[] = $val - array_sum($splits);
 

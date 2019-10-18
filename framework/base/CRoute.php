@@ -703,7 +703,7 @@ abstract class CRoute extends CEle {
             $iController = new $controllerClass;
             $realAction  = 'action'.ucfirst($action);
             if(!method_exists($iController, $realAction)){
-                $action  = 'entry';
+                $this->action = $action  = 'entry';
                 $realAction = 'action'.ucfirst($action);
             }
             $this->_append_rest_params($route, $dirs, $controller, $action);
@@ -806,7 +806,7 @@ abstract class CRoute extends CEle {
     */
     public function getAppRoute($prex='')
     {
-        return $prex . ltrim($this->appRoute,'/');
+        return $prex . ltrim($this->path.'/'.$this->action, '/');
     }
     public function getAppPath()
     {
