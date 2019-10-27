@@ -156,6 +156,13 @@ class CSession extends CEle{
     {
         if(!$this->enable) return false;
         $file = $this->_get_file($sessId);
+
+        if(2==$this->CgiMode && isset($this->response) && $this->response){
+            $this->response->cookie($this->cookie, $sessId, time()-3600, '/', $this->domain);//clean
+        }else{
+            setCookie($this->cookie, $sessId, time()-3600, '/', $this->domain); //clean
+        }
+
         if(is_file($file)) {
             return @unlink($file);
         }else {
@@ -229,11 +236,11 @@ class CSession extends CEle{
         if(rename($prev_file, $will_file)){
             if(2==$this->CgiMode && isset($this->request) && isset($this->response) && $this->request && $this->response){
                 $request->cookie[$cookie] = $willid;
-                $this->cookie($cookie, $willid, 0, '/', $this->domain);//clean
+                $this->cookie($cookie, $willid, time()-3600, '/', $this->domain);//clean
                 $this->cookie($cookie, $willid, $expireAt+604800, '/', $this->domain);
             }else{
                 $_COOKIE[$cookie] = $willid;
-                setCookie($cookie, $willid, 0, '/', $this->domain); //clean
+                setCookie($cookie, $willid, time()-3600, '/', $this->domain); //clean
                 setCookie($cookie, $willid, $expireAt+604800, '/', $this->domain);
             }
         }
