@@ -1164,16 +1164,22 @@ abstract class CRoute extends CEle {
     *desc: url redirection
     *
     */
-    function location($url=null, $ending=true)
+    function location($url=null, $ending=true, $is301=false)
     {
         if(!$url)$url = '/';
         $this->cleanBuffer();
         if($this->response){
+            if($is301){
+                $this->response->header('HTTP/1.1 301 Moved Permanently');
+            }
             $this->response->header("location", $url);
             $this->response->status(302);
             // $this->response->end('');
             // throw new RuntimeExitException('redirect->'. $url);
         }else{
+            if($is301){
+                header('HTTP/1.1 301 Moved Permanently');
+            }
             header("Location: {$url}");
             if($ending)exit(0);
         }
