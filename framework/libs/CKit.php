@@ -32,7 +32,8 @@ class CKit {
         if(18 != $len){
             $age = substr($age, -2);
         }
-        $sex    = intval(substr($idcard, 18==$len?-2:-1, 1))%2;
+        $sex    = intval(substr($idcard, 18==$len?-2:-2, 1))%2;
+        $sex    = 1==$sex?1:-1;
         $retArr = array(
             'status'  => true,
             'message' => '',
