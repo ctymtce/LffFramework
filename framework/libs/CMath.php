@@ -70,6 +70,7 @@ class CMath {
     static function DownTrimUnit($val, $isfive=true)
     {
         //取得离val最近的,比val小的且能被10或100...整除的那个数
+        if($val <= 0) return 0;
         $val = floatval($val);
         $mutiple = 1; //放大的倍数
         if($val < 100){
@@ -88,7 +89,7 @@ class CMath {
         }
         $val = $high * pow(10,$len-1);
         $val = ($val < 10)?10:$val;
-        return $val /= $mutiple;
+        return intval($val /= $mutiple);
     }
     /**
     * 将一个数人性化切分成多个数字
