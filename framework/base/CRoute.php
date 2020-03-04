@@ -226,7 +226,12 @@ abstract class CRoute extends CEle {
     public function urlTo($url, $domain=null, $modifies=array())
     {
         if(strlen($url) < 5) return $url;
-        if(strpos($url, $domain.'.'))return $url;
+        if($pos_qmark = strpos($url, '?')){
+            //不能判断参数后的字符串
+            if(strpos(substr($url,0,$pos_qmark), $domain.'.')){
+                return $url;
+            }
+        }
         $tArr = parse_url($url);
 
         if($domain && isset($tArr['host'])){
