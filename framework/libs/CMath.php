@@ -125,7 +125,7 @@ class CMath {
     *@num int $num 要转换的小写数字或小写字符串
     *return 大写字母
     */
-    function  ArabNumbirc2Chinese($num)
+    static function  ArabNumbirc2Chinese($num)
     {
         $c1 = "零壹贰叁肆伍陆柒捌玖";
         $c2 = "分角元拾佰仟万拾佰仟亿";
