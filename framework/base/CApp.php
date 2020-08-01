@@ -229,10 +229,15 @@ class CApp extends CRoute {
         $class = 'C'.$cid.'Cache';
         return $this->Arr690310646802722[$id] = new $class($dir);
     }
+    function getRCache($limit = 0)
+    {
+        return $this->getCache('R', $limit);
+    }
     function LoadCache($cid='C', $dir='/tmp')
     {
         return $this->getCache($cid, $dir);
     }
+
     /*
     *desc: get redis instance
     *retrun redis instance
