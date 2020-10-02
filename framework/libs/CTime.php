@@ -41,6 +41,11 @@ class CTime {
     {
         return date("Y-m-01", $dtime?strtotime($dtime):time());
     }
+    //指定日期的那一月的最后一天
+    static function monLastDay($dtime=null)
+    {
+        return self::getMonthLast($dtime);
+    }
     //计算距离当前n月时间(nm可为负)
     static function monDiff($nm=0, $delta=1)
     {

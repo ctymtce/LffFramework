@@ -10,7 +10,7 @@ abstract class CRoute extends CEle {
     
     protected $configs    = array();
 
-    protected $cgimode    = 1; //1:FPM,2:SWOOLE
+    protected $CgiMode    = 1; //1:FPM,2:SWOOLE
     protected $request    = null;
     protected $response   = null;
 
@@ -1149,7 +1149,7 @@ abstract class CRoute extends CEle {
         if($port = $this->getConfig('port')){
             return $port;
         }
-        if(2 == $this->cgimode){
+        if(2 == $this->CgiMode){
             $iSERVER = array_change_key_case($this->request->server, CASE_UPPER);
         }else{
             $iSERVER = &$_SERVER;
@@ -1191,7 +1191,7 @@ abstract class CRoute extends CEle {
     }
     function method()
     {
-        if(2 == $this->cgimode){
+        if(2 == $this->CgiMode){
             return $this->request->server['request_method'];
         }else{
             return isset($_SERVER['REQUEST_METHOD'])?$_SERVER['REQUEST_METHOD']:'GET';
@@ -1203,7 +1203,7 @@ abstract class CRoute extends CEle {
     }
     public function getCookie($key, $default=null)
     {
-        if(2 == $this->cgimode){
+        if(2 == $this->CgiMode){
             return isset($this->request->cookie[$key])?$this->request->cookie[$key]:$default;
         }else{
             if(!isset($_COOKIE))return $default;
@@ -1212,7 +1212,7 @@ abstract class CRoute extends CEle {
     }
     protected function getRef()
     {
-        if(2 == $this->cgimode){
+        if(2 == $this->CgiMode){
             return isset($this->request->server['referer'])?$this->request->server['referer']:null;
         }else{
             return isset($_SERVER['HTTP_REFERER'])?
@@ -1223,7 +1223,7 @@ abstract class CRoute extends CEle {
     }
     protected function Agent()
     {
-        if(2 == $this->cgimode){
+        if(2 == $this->CgiMode){
             return isset($this->request->server['agent'])?$this->request->server['agent']:null;
         }else{
             return isset($_SERVER['HTTP_USER_AGENT'])?
