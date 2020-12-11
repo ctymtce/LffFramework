@@ -1126,17 +1126,28 @@ abstract class CRoute extends CEle {
         }
         if($key && isset($iSERVER[$key])){
             return $iSERVER[$key];
-        }elseif(isset($iSERVER['HTTP_X_FORWARDED_FOR'])){
-            if(strpos($iSERVER['HTTP_X_FORWARDED_FOR'], ',')){//多级反向代理
-                return strstr($iSERVER['HTTP_X_FORWARDED_FOR'], ',', true);
+        }
+        if(2 == $this->CgiMode){
+            if(isset($iSERVER['X-FORWARDED-FOR'])){
+                return $iSERVER['X-FORWARDED-FOR'];
+            }elseif(isset($iSERVER['X-REAL-IP'])){
+                return $iSERVER['X-REAL-IP'];
+            }elseif(isset($iSERVER['REMOTE_ADDR'])){
+                return $iSERVER['REMOTE_ADDR'];
             }
-            return $iSERVER['HTTP_X_FORWARDED_FOR'];
-        }elseif(isset($iSERVER['HTTP_X_REAL_IP'])){
-            return $iSERVER['HTTP_X_REAL_IP'];
-        }elseif(isset($iSERVER['REMOTE_ADDR'])){
-            return $iSERVER['REMOTE_ADDR'];
-        }elseif(isset($iSERVER['SERVER_ADDR'])){
-            return $iSERVER['SERVER_ADDR'];
+        }else{
+            if(isset($iSERVER['HTTP_X_FORWARDED_FOR'])){
+                if(strpos($iSERVER['HTTP_X_FORWARDED_FOR'], ',')){//多级反向代理
+                    return strstr($iSERVER['HTTP_X_FORWARDED_FOR'], ',', true);
+                }
+                return $iSERVER['HTTP_X_FORWARDED_FOR'];
+            }elseif(isset($iSERVER['HTTP_X_REAL_IP'])){
+                return $iSERVER['HTTP_X_REAL_IP'];
+            }elseif(isset($iSERVER['REMOTE_ADDR'])){
+                return $iSERVER['REMOTE_ADDR'];
+            }elseif(isset($iSERVER['SERVER_ADDR'])){
+                return $iSERVER['SERVER_ADDR'];
+            }
         }
         return $def?$def:'127.0.0.1';
     }
