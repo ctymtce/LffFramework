@@ -1224,7 +1224,36 @@ abstract class CRoute extends CEle {
     protected function Agent()
     {
         if(2 == $this->CgiMode){
-            return isset($this->request->server['agent'])?$this->request->server['agent']:null;
+            // file_put_contents('/tmp/z.log', json_encode($this->request->server));
+            /*
+            {
+                "request_method":"POST",
+                "request_uri":"/st/access",
+                "path_info":"/st/access",
+                "request_time":1607649491,
+                "request_time_float":1607649491.9933,
+                "server_port":45005,
+                "remote_port":50710,
+                "remote_addr":"127.0.0.1",
+                "master_time":1607649491,
+                "server_protocol":"HTTP/1.0",
+                "server_software":"swoole-http-server",
+                "connection":"keep-alive",
+                "x-real-ip":"127.0.0.1",
+                "host":"api.artwaker.com",
+                "http_host":"api.artwaker.com",
+                "x-forwarded-for":"127.0.0.1",
+                "prefix":"api",
+                "content-length":"237",
+                "accept":"**",
+                "user-agent":"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36",
+                "content-type":"application/x-www-form-urlencoded; charset=UTF-8",
+                "origin":"http://www.artwaker.com",
+                "referer":"http://www.artwaker.com/",
+                "accept-encoding":"gzip, deflate",
+                "accept-language":"zh-CN,zh;q=0.9,en;q=0.8,la;q=0.7"
+                }*/
+            return isset($this->request->server['user-agent'])?$this->request->server['user-agent']:null;
         }else{
             return isset($_SERVER['HTTP_USER_AGENT'])?
                 $_SERVER['HTTP_USER_AGENT']:(
