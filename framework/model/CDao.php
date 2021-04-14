@@ -35,7 +35,6 @@ class CDao extends CEle{
     private $floatArr = array(
         'float',
         'double',
-        'decimal',
         'real'
     );
     private $pdbArr = array();
@@ -1202,7 +1201,22 @@ class CDao extends CEle{
         if(!$tc) return false;
         return $tc->prkey;
     }
-
+    /*
+    * desc: get CREATE TABLE information
+    *
+    */
+    public function getCreates($table)
+    {
+        $db = $this->getConnection();
+        $tArr = $db->getCreates($table);
+        if(isset($tArr[0])){
+            $tArr = array_pop($tArr);
+        }
+        if(isset($tArr['Create Table'])){
+            return $tArr['Create Table'];
+        }
+        return $tArr;
+    }
     /*
     * desc: 为表格创建模板
     *

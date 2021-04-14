@@ -308,6 +308,16 @@ class CMysql extends CPdb {
         }
         return $descArr;
     }
+    /*
+    * desc: get CREATE TABLE information
+    *
+    */
+    public function getCreates($table)
+    {
+        $table  = '`'.trim($table,'`').'`';
+        $sql = "show create table {$table}";
+        return $this->execute($sql);
+    }
     protected function addLimit($sql, $start=0, $limit=20)
     {
         $sql = strtolower($sql);
