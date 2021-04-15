@@ -109,7 +109,7 @@ class CTool {
     * $Elapsed = sprintf("%.4f", $time_after - $time_before);
     *
     */
-    static function getUTime()
+    static function getUTime(&$sec=0, &$usec=0)
     {
         list($usec, $sec) = explode(' ',microtime());
         $time   = ((float)$usec + (float)$sec);

@@ -35,7 +35,8 @@ class CDao extends CEle{
     private $floatArr = array(
         'float',
         'double',
-        'decimal',        'real'
+        'decimal',
+        'real'
     );
     private $pdbArr = array();
     private $errArr = array();
@@ -552,7 +553,6 @@ class CDao extends CEle{
                 return true;
             }
         }
-
         $id = $db->insert($table, $addArr, $exArr);
         // printf("%s\n", $db->getSql(true));
         // print_r($db->getError());
@@ -990,7 +990,11 @@ class CDao extends CEle{
                 if('mongo' == $tc->driver){
                     $v = floatval($v);
                 }else{
-                    $v = number_format(floatval($v), 0,'','');
+                    if(function_exists('bcadd')){
+                        $v = bcadd(strval($v), 0, 0);
+                    }else{
+                        $v = number_format(floatval($v), 0,'','');
+                    }
                 }
                 continue;
             }elseif(in_array($_type, $this->floatArr)){
@@ -999,7 +1003,11 @@ class CDao extends CEle{
                     if('mongo' == $tc->driver){
                         $v = floatval($v);
                     }else{
-                        $v = number_format(floatval($v),$exArr['len2'],$exArr['dot'],'');
+                        if(function_exists('bcadd')){
+                            $v = bcadd(strval($v), 0, $exArr['len2']);
+                        }else{
+                            $v = number_format(floatval($v),$exArr['len2'],$exArr['dot'],'');
+                        }
                     }
                     continue;
                 }
