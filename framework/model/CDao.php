@@ -35,7 +35,7 @@ class CDao extends CEle{
     private $floatArr = array(
         'float',
         'double',
-        'real'
+        'decimal',        'real'
     );
     private $pdbArr = array();
     private $errArr = array();
