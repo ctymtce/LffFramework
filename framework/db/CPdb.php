@@ -341,10 +341,15 @@ abstract class CPdb {
                     case 'find_in_set':
                     case 'find_ni_set':
                         if(!empty($value)){
-                            $vArr = is_array($value)?$value:array($value);
+                            if(is_array($value)){
+                                $vArr = array_map(function($v){
+                                    return "'". addslashes($v) ."'";
+                                }, $value);
+                            }else{
+                                $vArr = array($value);
+                            }
                             $whset = array();
                             foreach($vArr as $val){
-                                $val = "'" . addslashes($val) . "'";
                                 $whtmp = "find_in_set($val,$field)";
                                 if('find_ni_set' == $op) $whtmp = 'not '.$whtmp;
                                 $whset[] = $whtmp;
