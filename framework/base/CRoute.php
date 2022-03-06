@@ -617,9 +617,10 @@ abstract class CRoute extends CEle {
     }
     /*
     * desc: 获取并整理路由
-    *
+    *       其间不能有退出函数，包括exit,fastcgi_finish_request之类的函数调用
     *@route  --- str  可显示地设置一个路由(eg.'user/profile')
     *@manual --- bool 标识是否人为显示地运行一个路由(也就是@route显手工传的参数)
+    *
     * eg.:
     *       controller
     *       │  KClub.php
@@ -680,14 +681,18 @@ abstract class CRoute extends CEle {
         // echo ("action = $action\n");
         return $this->runDCA($ctrlFile,$route, $FOLDERs,$controller,$action, $parameters);
     }
-    public function runRouteEx($route=null, $sub=null)
+    public function runRouteEx($route=null, $parameters=null, $sub=null)
     {
-        $this->runRoute($route, null, true, $sub);
+        $route = trim($route, './');
+        if(strpos($route, '.')){
+            $route = str_replace('.','/',$route);
+        }
+        return $this->runRoute($route, $parameters, true, $sub);
     }
 
     public function runRouteApi($route=null, $parameters=null)
     {
-        $this->runRoute($route, $parameters, true, 'api');
+        return $this->runRoute($route, $parameters, true, 'api');
     }
     /*
     * desc: 运行某目录下[默认]控制器[默认]方法
