@@ -56,7 +56,8 @@ class CUrl {
             $isCURLFile = class_exists('CURLFile',false);
             foreach($files as $key => $file){
                 if($isCURLFile){
-                    $paramters[$key] = new CURLFile(realpath($file));
+                    $fileobj = new CURLFile(realpath($file));
+                    $paramters[$key] = $fileobj;
                 }else{
                     $paramters[$key] = '@' . realpath($file);
                 }
@@ -69,8 +70,9 @@ class CUrl {
             $headers[] = 'Expect: ';
         }else{
             if(is_array($paramters) && $paramters){
-                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
                 curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($paramters));
+            }elseif(is_string($paramters)){
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $paramters);
             }
         }
         
@@ -111,8 +113,7 @@ class CUrl {
         //执行请求==================
         do{
             $result = curl_exec($ch);
-            // if(false === $result) {usleep(500000 * $i); continue; }
-        }while(false===$result && ($loops=isset($loops)?++$loops:1)<5);
+        }while(false===$result && ($loops=isset($loops)?++$loops:1)<1);
 
         if(false === $result) return false;
         $infos = curl_getinfo($ch);
@@ -132,7 +133,7 @@ class CUrl {
     static function curlSend($url, $paramters=array(), $options=array(), $files=null)
     {
         if(!is_array($options)) $options = array();
-        $options['method'] = 'POST';
+        $options['method'] = isset($options['method'])?$options['method']:'POST';
         $result = self::curlReq($url, $paramters, $options, $files);
         if(isset($options['format']) && 'json'==$options['format']){
             return json_decode($result, true);

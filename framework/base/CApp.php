@@ -78,7 +78,7 @@ class CApp extends CRoute {
 
     public function StartupSession()
     {
-        $session   = $this->getSession();
+        $session = $this->getSession();
         $this->cleanBuffer();
         $options = $this->getConfig('session_options');
         $options['domain'] = $this->getConfig('domain');
@@ -170,7 +170,8 @@ class CApp extends CRoute {
         // require($modelFile);
         $clazz = $this->requireOnce($modelFile);
         if(false===$clazz || (1==$clazz && !class_exists($class,false))) {
-            return $this->httpError(500, 'The model class does not exists('.$modelFile.')!');
+            return $this->Exception('The model class does not exists('.$modelFile.')');
+            // return $this->httpError(500, 'The model class does not exists('.$modelFile.')!');
         }
         if(strpos($clazz, '\\')){
             return $this->Arr726128772794766[$id] = new $clazz;

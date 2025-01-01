@@ -342,17 +342,26 @@ abstract class CRoute extends CEle {
     /**
     * author: cty@20120326
     *   func: create url
-    *@route   --- string(controller/action)
-    *@paraArr --- string url parameters
-    * reutrn: url;
+    *@route   --- str(controller/action)
+    *@paraArr --- arr url parameters
+    *@diffs   --- str 要排除的参数
+    *
+    * reutrn: url/str;
     */
-    public function makeUrl($route=null, $paraArr=array(), $prex=null)
+    public function makeUrl($route=null, $paraArr=array(), $prex=null, $diffs=null)
     {
+        if(!is_array($paraArr))$paraArr=array();
         $port = $this->port();
         if(strpos($route, '?')){
             $url_paras = ltrim(strstr($route, '?'),'?');
             parse_str($url_paras, $url_paras);
             if($url_paras){
+                if($diffs){
+                    $diffArr = explode(',', $diffs);
+                    foreach($diffArr as $dkey){
+                        unset($url_paras[$dkey]);
+                    }
+                }
                 $paraArr = array_merge($paraArr, $url_paras);
             }
             $route = strstr($route, '?', true);
@@ -395,15 +404,15 @@ abstract class CRoute extends CEle {
         }
         return $routeUrl;
     }
-    public function mkUrl($route=null, $paraArr=array(), $strict=true)
+    public function mkUrl($route=null, $paraArr=array(), $diffs=null, $strict=true)
     {
-        if($strict){
+        if($strict && $paraArr){
             $paraArr = array_filter($paraArr);
         }
         if(!$route){
-            return rtrim($this->makeUrl('\\', $paraArr, null, null), '\\/');
+            return rtrim($this->makeUrl('\\', $paraArr, null, $diffs), '\\/');
         }
-        return $this->makeUrl($route, $paraArr, null, null);
+        return $this->makeUrl($route, $paraArr, null, $diffs);
     }
     /**
     * author: cty@20120326
@@ -686,6 +695,13 @@ abstract class CRoute extends CEle {
         $route = trim($route, './');
         if(strpos($route, '.')){
             $route = str_replace('.','/',$route);
+        }
+        if(strpos($route, '?')){//路由带参数
+            $puArr = parse_url($route);
+            $route = $puArr['path'];
+            parse_str($puArr['query'],$params);
+            if(!is_array($parameters))$parameters=array();
+            $parameters = array_merge($parameters, $params);
         }
         return $this->runRoute($route, $parameters, true, $sub);
     }
@@ -1216,6 +1232,17 @@ abstract class CRoute extends CEle {
     function isPost()
     {
         return 'POST'==$this->method()?true:false;
+    }
+    function isAjax()
+    {
+        if(2 == $this->CgiMode){
+            $iSERVER = array_change_key_case($this->request->server, CASE_UPPER);
+        }else{
+            $iSERVER = &$_SERVER;
+        }
+        $xmlHTTPREQUESTstr = isset($iSERVER['HTTP_X_REQUESTED_WITH'])?strtoupper($iSERVER['HTTP_X_REQUESTED_WITH']):null;
+
+        return 'xmlhttprequest'==$xmlHTTPREQUESTstr ? true : false;
     }
     public function getCookie($key, $default=null)
     {

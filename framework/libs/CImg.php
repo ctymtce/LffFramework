@@ -15,7 +15,7 @@ class CImg{
     *
     *
     */
-    static function cutImg($fpimg, $dWidth=250, $dHeight=280, $xArr=array())
+    private static function cutImg($fpimg, $dWidth=250, $dHeight=280, $xArr=array())
     {
         if(!is_file($fpimg)) return false;
         $iArr = self::getImageInfo($fpimg);
@@ -25,15 +25,16 @@ class CImg{
         $scope     = isset($xArr['scope'])?$xArr['scope']:false;
         $suffix    = isset($xArr['suffix'])?$xArr['suffix']:$dWidth.$dHeight;
         $topng     = isset($xArr['topng'])?$xArr['topng']:false; //是否转换为png
+        $beslide   = isset($xArr['beslide'])?$xArr['beslide']:false; //当出现长图是，是否随机从某一个坐标开始复制，而不是一味的从0,0开始复制
 
         if($skipsmall && $dWidth >= $iArr['width'] && $dHeight >= $iArr['height']) return $fpimg;
         
-        $graphOrigin = self::createImageFromAny($fpimg, $topng);
+        $graphOrigin = self::CreateImageFromAny($fpimg, $topng);
         if(!$graphOrigin)return false;
         $srcWidth  = imagesx($graphOrigin); //原始图宽度
         $srcHeight = imagesy($graphOrigin); //原始图高度
 
-        if(isset($xArr['removeblank'])){ //移除空白
+        if(isset($xArr['rmblank'])){ //移除空白
             $loops = 0;
             $rgbfirst  = self::_get_rgb($graphOrigin, 0, 0);
             
@@ -103,6 +104,7 @@ class CImg{
                         if($rgbx != $rgbfirst){
                             $x2   = $x; //logic
                             $min  = $x + 1;
+
                             $x   += ($step-1);
                             $step = 1;
                             if(isset($into_limit) && $into_limit){
@@ -234,7 +236,6 @@ class CImg{
             imagefill($graphThumbl, 0, 0, $alpha);
         }
 
-
         if($explicitly){
             imagecopyresampled($graphThumbl, $graphOrigin, 0, 0, $srcX1, $srcY1, $dWidth, $dHeight, $dWidth, $dHeight);
         }else{
@@ -243,8 +244,8 @@ class CImg{
                 $dstWidth  = $srcWidth;
                 $dstHeight = $srcHeight;
             }else {
-                $divW = $srcWidth  / $dWidth;   //长和宽的比值
-                $divH = $srcHeight / $dHeight;  //长和宽的比值
+                $divW = $srcWidth  / $dWidth;   //宽长宽的比值
+                $divH = $srcHeight / $dHeight;  //高和高的比值
                 // $scope = true; //标识了被截剪后的图片是否保持全景
                 if($scope) {
                     if($divW >= $divH) { //表示为横图(在y方向需要被白),目标高度需要计算
@@ -255,12 +256,20 @@ class CImg{
                         $dstHeight = $dHeight;
                     }
                 }else { //生成的缩略图布满整个图片(这意味着原图可能被截剪)
-                    if($divW >= $divH) { //表示为横图(在y方向需要被白)
-                        $dstWidth  = ($srcWidth*$dHeight)/$srcHeight;
+                    if($divW >= $divH) { //表示为横图
+                        $dstWidth  = ($srcWidth*$dHeight)/$srcHeight;//这是根据相似比来计算的
                         $dstHeight = $dHeight;
+                        //add on 20241022
+                        $zmultiple = $srcWidth/$dstWidth; //被缩放的倍数
+                        $slideWMax = intval($srcWidth-$dWidth*$zmultiple); //可滑动的最大宽度
+                        // echo "www:{$zmultiple},slide={$slideWMax}\n";
                     }else {//表示为竖图(在x方向需要被截)
                         $dstWidth  = $dWidth;
                         $dstHeight = ($srcHeight*$dWidth)/$srcWidth;
+                        //add on 20241022
+                        $zmultiple = $srcHeight/$dstHeight; //被缩放的倍数
+                        $slideHMax = intval($srcHeight-$dHeight*$zmultiple); //可滑动的最大宽度
+                        // echo "hhh:{$zmultiple},slide={$slideHMax}\n";
                     }
                 }
             }
@@ -271,9 +280,18 @@ class CImg{
             if($dstWidth < $dWidth) {
                 $dstX = ($dWidth-$dstWidth)/2;
             }
+
+            if($beslide){
+                if(isset($slideWMax)){
+                    $srcX1 += mt_rand($srcX1, $slideWMax-$srcX1);
+                }
+                if(isset($slideHMax)){
+                    $srcY1 += mt_rand($srcY1, $slideHMax-$srcY1);
+                }
+            }
             
             if(function_exists('imagecopyresampled')){
-                // echo "$dstX, $dstY, $srcX1, $srcY1, $dstWidth, $dstHeight, $dWidth, $dHeight";
+                // echo ">>>from=[($srcX1,$srcY1),($srcWidth,$srcHeight)], to=[($dstX, $dstY),($dstWidth, $dstHeight)]\n";
                 imagecopyresampled($graphThumbl, $graphOrigin, $dstX, $dstY, $srcX1, $srcY1, $dstWidth, $dstHeight, $srcWidth, $srcHeight);
             }else{
                 imagecopyresized($graphThumbl, $graphOrigin, $dstX, $dstY, $srcX1, $srcY1, $dstWidth, $dstHeight, $srcWidth, $srcHeight);
@@ -312,9 +330,14 @@ class CImg{
     
     static function removeBlank($fpimg)
     {
-        return self::cutImg($fpimg, null,null,array('removeblank'=>1,'fast'=>1, 'topng'=>true));
+        return self::Cutting($fpimg, null ,null, array(
+                'rmblank' => 1,
+                'topng' => true,
+                'fast' => 1, 
+            )
+        );
     }
-    static private function _get_rgb($graph, $x=0, $y=0)
+    private static function _get_rgb($graph, $x=0, $y=0)
     {
         $rgb = imagecolorat($graph, $x, $y);
         $r = ($rgb >> 16) & 0xFF;
@@ -323,9 +346,15 @@ class CImg{
         return sprintf("0x%02x%02x%02x",$r,$g,$b);
     }
     //return resource
-    static function createImageFromAny($fpimg, $topngOr=false, $ftsize=4)
+    static function CreateImageFromAny($fpimg, $topngOr=false, $ftsize=4)
     {
         $isPng = false;
+        if(filter_var($fpimg, FILTER_VALIDATE_URL) !== false) {
+            $tmp_dir = sys_get_temp_dir();
+            $fp_data = file_get_contents($fpimg);
+            $fptmp = $fpimg = $tmp_dir.'/'.basename($fpimg);
+            file_put_contents($fpimg, $fp_data);
+        }
         if(is_file($fpimg)){//从文件
             $iArr = self::getImageInfo($fpimg);
             if(false === $iArr) return false;
@@ -389,6 +418,11 @@ class CImg{
             }*/
             return $graphOld;
         }
+
+        if(isset($fptmp)){
+            @unlink($fptmp);
+        }
+
         if($topngOr && !$isPng){
             $graphNew = imagecreatetruecolor($iArr['width'], $iArr['height']);
             if(!$graphNew)return $graphOld;
@@ -396,7 +430,37 @@ class CImg{
             imagecopy($graphNew, $graphOld, 0,0,   0,0,$iArr['width'], $iArr['height']);
             return $graphNew;
         }
+
         return $graphOld;
+    }
+
+    static function Circlize($gdsrc, $w=0,$h=0)
+    {
+        if(0==$w) $w = imagesx($gdsrc);
+        if(0==$h) $h = imagesy($gdsrc);
+
+        $gdnew = imagecreatetruecolor($w,$h);  
+        imagealphablending($gdnew,false);  
+        $transparent = imagecolorallocatealpha($gdnew, 0, 0, 0, 127);
+
+        $r=$w/2;  
+        for($x=0;$x<$w;$x++){
+            for($y=0;$y<$h;$y++){
+                $c = imagecolorat($gdsrc,$x,$y);  
+                $_x = $x - $w/2;  
+                $_y = $y - $h/2;  
+                if((($_x*$_x) + ($_y*$_y)) < ($r*$r)){  
+                    imagesetpixel($gdnew,$x,$y,$c);  
+                }else{  
+                    imagesetpixel($gdnew,$x,$y,$transparent);  
+                }  
+            }
+        }
+        imagesavealpha($gdnew, true);  
+
+        imagedestroy($gdsrc);
+
+        return $gdnew;
     }
     /*
     * desc: 添加水印
@@ -406,8 +470,15 @@ class CImg{
     *@minwidth --- 主图最小宽度(小于它则不加水印)
     * return: true if success or else false
     */
-    static function Watermarking($fpimg, $fpmarkOr, $rename=true, $saved=true, $ftsize=4, $opacity=20, $minwidth=256)
+    static function Watermarking($fpimg, $fpmarkOr, $rename=true, $saved=true, $infos=array())
     {
+        $ftsize = isset($infos['ftsize'])?$infos['ftsize']:4;
+        $opacity = isset($infos['opacity'])?$infos['opacity']:20;
+        $minwidth = isset($infos['minwidth'])?$infos['minwidth']:256;
+        $marginRight = isset($infos['marginRight'])?$infos['marginRight']:8;
+        $marginBottom = isset($infos['marginBottom'])?$infos['marginBottom']:8;
+        $markerResize = isset($infos['markerResize'])?$infos['markerResize']:1;//是否绽放,1:不变
+
         $fporg = $fpimg;
         if($rename){//保存原文件
             if(strpos($fpimg, '.')){
@@ -417,7 +488,7 @@ class CImg{
             }
             file_put_contents($fporg, file_get_contents($fpimg));
         }
-        $graphMain = self::createImageFromAny($fpimg);
+        $graphMain = self::CreateImageFromAny($fpimg);
         
         $mainW = imagesx($graphMain);
         $mainH = imagesy($graphMain);
@@ -442,10 +513,22 @@ class CImg{
                 imagestring($graphMain, $ftsize, $point['x'], $point['y'], $point['text'], $rgba);
             }
         }else{
-            $graphMark = self::createImageFromAny($fpmarkOr, true, $ftsize);
+            $graphMark = self::CreateImageFromAny($fpmarkOr, true, $ftsize);
             $markW = imagesx($graphMark);
             $markH = imagesy($graphMark);
-            imagecopyresampled($graphMain, $graphMark, $mainW-$markW-8, $mainH-$markH-8, 0, 0, $markW, $markH, $markW, $markH);
+            if($markerResize){
+                $_dw = $markW*$markerResize;
+                $_dh = $markW*$markerResize;
+                $graphThumbl = imagecreatetruecolor($_dw, $_dh);
+                $rgbblack    = imagecolorallocate($graphThumbl,0,0,0);
+                imagecolortransparent($graphThumbl, $rgbblack);
+
+                imagecopyresized($graphThumbl, $graphMark, 0, 0, 0, 0, $_dw, $_dh, $markW, $markH);
+                imagecopyresampled($graphMain, $graphThumbl, $mainW-$_dw-$marginRight, $mainH-$_dh-$marginBottom, 0, 0, $_dw, $_dh, $_dw, $_dh);
+                ImageDestroy($graphThumbl);
+            }else{
+                imagecopyresampled($graphMain, $graphMark, $mainW-$markW-$marginRight, $mainH-$markH-$marginBottom, 0, 0, $markW, $markH, $markW, $markH);
+            }
             ImageDestroy($graphMark);
         }
         imagesavealpha($graphMain, true); //不失真
@@ -453,17 +536,107 @@ class CImg{
         if($saved){
             imagepng($graphMain, $fpimg);
         }else{
-            header("Content-Type: image/png");
+            header("Content-Type: image/jpeg");
             imagepng($graphMain);
         }
         ImageDestroy($graphMain);
         return $fporg;
     }
+    /*
+    * desc: 添加多个水印
+    *
+    *@$fpimg   --- string(被水印图片的地址)
+    *@dimens   --- arr 二维数组
+    *@fpmarkOr --- 水印图片(通常是小图片logo)或文字
+    *@minwidth --- 主图最小宽度(小于它则不加水印)
+    * return: true if success or else false
+    */
+    static function WatermarkingEx($fpmain, $dimens, $exArr=array())
+    {
+        $saved = isset($exArr['saved'])?$exArr['saved']:false;
+        $rename = isset($exArr['rename'])?$exArr['rename']:false;
+        $minwidth = isset($exArr['minwidth'])?$exArr['minwidth']:256;
+
+        $graphMain = self::CreateImageFromAny($fpmain);
+
+        $mainW = imagesx($graphMain);
+        $mainH = imagesy($graphMain);
+        
+        if($mainW < $minwidth){
+            ImageDestroy($graphMain);
+            ImageDestroy($graphMark);
+            return $fpmain;
+        }
+
+        foreach($dimens as $infos){
+            if(!isset($infos['fpmark']))continue;
+            $fpmark = $infos['fpmark'];
+            $ftsize = isset($infos['ftsize'])?$infos['ftsize']:4;
+            $opacity = isset($infos['opacity'])?$infos['opacity']:20;
+            $minwidth = isset($infos['minwidth'])?$infos['minwidth']:256;
+            $circlized = isset($infos['circlized'])?$infos['circlized']:false;
+            $marginRight = isset($infos['marginRight'])?$infos['marginRight']:8;
+            $marginBottom = isset($infos['marginBottom'])?$infos['marginBottom']:8;
+            $markerResize = isset($infos['markerResize'])?$infos['markerResize']:1;//是否绽放,1:不变
+
+            $graphMark = self::CreateImageFromAny($fpmark, true, $ftsize);
+            $markW = imagesx($graphMark);
+            $markH = imagesy($graphMark);
+            if(is_array($markerResize) || 1!=$markerResize){
+                if(is_array($markerResize)){
+                    list($_dw,$_dh) = $markerResize;
+                }else{
+                    $_dw = $markW*$markerResize;
+                    $_dh = $markW*$markerResize;
+                }
+
+                if($circlized){
+                    $graphThumbl = self::Circlize($graphMark,$_dw,$_dh);
+                }else{
+                    $graphThumbl = imagecreatetruecolor($_dw, $_dh);
+                    $rgbblack    = imagecolorallocate($graphThumbl,0,0,0);
+                    imagecolortransparent($graphThumbl, $rgbblack);
+
+                    imagecopyresized($graphThumbl, $graphMark, 0,0,0,0, $_dw,$_dh, $markW,$markH);
+                }
+                imagecopyresampled($graphMain, $graphThumbl, $mainW-$_dw-$marginRight, $mainH-$_dh-$marginBottom, 0, 0, $_dw, $_dh, $_dw, $_dh);
+                ImageDestroy($graphThumbl);
+            }else{
+                imagecopyresampled($graphMain, $graphMark, $mainW-$markW-$marginRight, $mainH-$markH-$marginBottom, 0, 0, $markW, $markH, $markW, $markH);
+                // ImageDestroy($graphMark);
+            }
+        }
+        imagesavealpha($graphMain, true); //不失真
+        
+        if($saved){
+            if($rename){//保存原文件
+                if(strpos($fpmain, '.')){
+                    $trr = explode('.', $fpmain);
+                    $ext = array_pop($trr);
+                    $fpsave = implode('.',$trr).uniqid().'nomark.'.$ext;
+                }else{
+                    $fpsave = $fpmain.'.jpg';
+                }
+                ob_start();
+                imagepng($graphMain);
+                $data = ob_get_clean();
+                file_put_contents($fpsave, $data);
+            }else{
+                imagepng($graphMain, $fpmain);
+            }
+        }else{
+            header("Content-Type: image/jpeg");
+            imagepng($graphMain);
+        }
+        ImageDestroy($graphMain);
+
+        return isset($fpsave)?$fpsave:$fporg;
+    }
 
     static function Textimage($text, $fpsave=null)
     {
         if(!$text) $text = ' ';
-        $graph = self::createImageFromAny($text);
+        $graph = self::CreateImageFromAny($text);
         imagesavealpha($graph, true); //不失真
         if($fpsave){
             imagepng($graph, $fpsave);
@@ -487,7 +660,7 @@ class CImg{
         $iArr = self::getImageInfo($fpimg);
         if(false === $iArr) return false;
         $type = $iArr['type'];
-        $graphOld = self::createImageFromAny($fpimg);
+        $graphOld = self::CreateImageFromAny($fpimg);
         if(null === $fpout) {
             $name = self::getName($fpimg);
             $fpout = dirname($fpimg) . '/' . $name. '.png';

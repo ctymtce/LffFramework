@@ -91,7 +91,7 @@ abstract class CEle {
     }
     public function cleanBuffer()
     {
-        if(ob_get_length() > 0) ob_clean();
+        // if(ob_get_length() > 0) ob_clean();
     }
     public function CallStacks($error='', $spliter="\n")
     {
@@ -336,36 +336,49 @@ abstract class CEle {
         return $rowArr;
     }
     /*
-    * desc: 和joinToArray差不多，只是按照subkeys平坦了置入rowArr
-    *       
+    * desc: 和joinToArray差不多，只是按照skeys平坦了置入Datas
+    *     默认是覆盖合并  
     *
     *
     */
-    public function joinToField($rowArr, $subArr, $fields, $subkeys=null, $prefix='', $defaults=array())
+    public function joinToField($Datas, $Subs, $fields, $skeys=null, $prefix='', $defs=null, $safe=false)
     {
-        if(empty($rowArr) || (empty($subArr) && empty($defaults))|| !is_array($rowArr) || !is_array($subArr) || !$subkeys)return $rowArr;
+        if(empty($Datas) || (empty($Subs) && empty($defs))|| !is_array($Datas) || !is_array($Subs))return $Datas;
         list($kL,$kR) = explode(':', $fields);
-        $subArr = $this->fieldAsKey($subArr, $kR);
-        // $this->dump($subArr);
-        $subkeys = array_flip(explode(',', str_replace(array(' '),'',$subkeys)));
-        // $this->dump($rowArr);
-        foreach($rowArr as &$rr){
+        $Subs = $this->fieldAsKey($Subs, $kR);
+        if(!$skeys){
+            $skeys = array_flip(array_keys(current($Subs)));//所有字段
+        }else{
+            $skeys = array_flip(explode(',', str_replace(array(' '),'',$skeys)));
+        }
+        foreach($Datas as &$rr){
             if(!isset($rr[$kL])) continue;
-            if(isset($subArr[$rr[$kL]])){
-                $subsubArr = array_intersect_key($subArr[$rr[$kL]], $subkeys);
+            if($safe){
+                if(!isset($dkeys)){
+                    $dkeys = array_flip(array_keys($rr));
+                    $skeys = array_diff_key($skeys, $dkeys);
+                }
+            }
+            $value_left = $rr[$kL];
+            if(isset($Subs[$value_left])){
+                $tArr = array_intersect_key($Subs[$value_left], $skeys);
                 if($prefix){
-                    $subsubArr = array_combine(
+                    $tArr = array_combine(
                         array_map(function($k)use($prefix){return $prefix.$k;}, 
-                            array_keys($subsubArr)),
-                        $subsubArr
+                            array_keys($tArr)),
+                        $tArr
                     );
                 }
-                $rr = array_merge($rr, $subsubArr);
-            }elseif($defaults){
-                $rr = array_merge($rr, $defaults);
+                $rr = array_merge($rr, $tArr);
+            }elseif($defs){
+                $rr = array_merge($rr, $defs);
             }
         }
-        return $rowArr;
+        return $Datas;
+    }
+    public function safeToField($Datas, $Subs, $fields, $skeys=null, $safe=true)
+    {
+        return $this->joinToField($Datas, $Subs, $fields, null,'',null, $safe);
     }
     public function fieldAsKey($dataArr, $field='id')
     {
@@ -406,6 +419,23 @@ abstract class CEle {
                 }
             }
         }
+        return $array;
+    }
+    /*
+    * desc: 在一个二维数组中找出key为$key，值为val的项。其他的扔掉
+    * @array  --- arr 二维数组      
+    * @key  --- int|string 
+    * @val --- mixed      
+    */
+    public function arrayFilter($array, $key, $val)
+    {
+        $array = array_map(function($record)use($key,$val){
+            if(isset($record[$key]) && $val==$record[$key]){
+                return $record;
+            }
+            return null;
+        }, $array);
+        $this->removeArrayNull($array);
         return $array;
     }
     /*

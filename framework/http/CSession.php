@@ -152,15 +152,17 @@ class CSession extends CEle{
     *@sessId --- str session id
     *
     */
-    public function destroy($sessId)
+    public function destroy($sessId, $beexpired=true)
     {
         if(!$this->enable) return false;
         $file = $this->_get_file($sessId);
 
-        if(2==$this->CgiMode && isset($this->response) && $this->response){
-            $this->response->cookie($this->cookie, $sessId, time()-3600, '/', $this->domain);//clean
-        }else{
-            setCookie($this->cookie, $sessId, time()-3600, '/', $this->domain); //clean
+        if($beexpired){
+            if(2==$this->CgiMode && isset($this->response) && $this->response){
+                $this->response->cookie($this->cookie, $sessId, time()-3600, '/', $this->domain);//clean
+            }else{
+                setCookie($this->cookie, $sessId, time()-3600, '/', $this->domain); //clean
+            }
         }
 
         if(is_file($file)) {
@@ -344,7 +346,7 @@ class CSession extends CEle{
         // $sesses['expire'] = $this->_expire();
         // $sesses['domain'] = $this->domain;
         $ok = $this->write($sessId, $sesses);
-        return $ok?$val:false;
+        return $ok?$sessId:false;
     }
 
     function sets($kvArr)

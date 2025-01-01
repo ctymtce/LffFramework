@@ -297,6 +297,10 @@ class CDao extends CEle{
             $this->ftExtras($table, $exArr);
         }
         
+        if(!is_string($table)){
+            return $this->writeDaoLog('Error Table Name!', $exArr['log']);
+        }
+
         //数据库查询相关变量=========================
         $exArr['page']  = isset($exArr['page'])?intval($exArr['page']):1;
         $exArr['page']  = max($exArr['page'], 1);
@@ -1177,11 +1181,11 @@ class CDao extends CEle{
     public function ftExtras($table, &$exArr)
     {
         if(!$exArr || !is_array($exArr)) return;
-        $main_prex = isset($exArr['main_prex'])?$exArr['main_prex']:$table;
+        $prefixer = isset($exArr['prefixer'])?$exArr['prefixer']:$table;
         foreach($exArr as $k=>$v){
             if(is_array($v))continue;
             if(strpos($v,':') && 'join' == strtolower(substr($k,0,4))){
-                $join_table = $main_prex . substr($k,4);
+                $join_table = $prefixer . substr($k,4);
                 if(is_string($v)){
                     $exArr['join'][$join_table] = $v;
                     unset($exArr[$k]);
